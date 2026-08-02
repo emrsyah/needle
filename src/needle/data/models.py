@@ -21,10 +21,12 @@ class EvidenceRef:
 
     def __post_init__(self) -> None:
         _require_non_empty_text(self.document_title, "document_title")
-        if isinstance(self.sentence_index, bool) or not isinstance(self.sentence_index, int):
-            raise HotpotQAValidationError("sentence_index must be an integer")
-        if self.sentence_index < 0:
-            raise HotpotQAValidationError("sentence_index must be non-negative")
+        if isinstance(self.sentence_index, bool):
+            raise HotpotQAValidationError(
+                "sentence_index must be a non-negative integer, not a boolean"
+            )
+        if not isinstance(self.sentence_index, int) or self.sentence_index < 0:
+            raise HotpotQAValidationError("sentence_index must be a non-negative integer")
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,30 +57,41 @@ class QuestionExample:
 
     def __post_init__(self) -> None:
         _require_non_empty_text(self.question_id, "question_id")
-        _require_non_empty_text(self.question, "question")
-        _require_non_empty_text(self.gold_answer, "gold_answer")
+        context = f"example {self.question_id!r}: "
+        _require_non_empty_text(self.question, f"{context}question")
+        _require_non_empty_text(self.gold_answer, f"{context}gold_answer")
 
         if not isinstance(self.documents, tuple) or not self.documents:
-            raise HotpotQAValidationError("documents must be a non-empty tuple")
+            raise HotpotQAValidationError(f"{context}documents must be a non-empty tuple")
 
-        titles: set[str] = set()
+        documents_by_title: dict[str, Document] = {}
         for document in self.documents:
             if not isinstance(document, Document):
-                raise HotpotQAValidationError("documents must contain Document instances")
-            if document.title in titles:
-                raise HotpotQAValidationError(f"duplicate document title: {document.title!r}")
-            titles.add(document.title)
+                raise HotpotQAValidationError(f"{context}documents must contain Document instances")
+            if document.title in documents_by_title:
+                raise HotpotQAValidationError(
+                    f"{context}documents contain duplicate title: {document.title!r}"
+                )
+            documents_by_title[document.title] = document
 
         if not isinstance(self.supporting_facts, frozenset) or not self.supporting_facts:
-            raise HotpotQAValidationError("supporting_facts must be a non-empty frozenset")
+            raise HotpotQAValidationError(
+                f"{context}supporting_facts must be a non-empty frozenset"
+            )
 
         for fact in self.supporting_facts:
             if not isinstance(fact, EvidenceRef):
-                raise HotpotQAValidationError("supporting_facts must contain EvidenceRef instances")
-            document = self.document_for_title(fact.document_title)
+                raise HotpotQAValidationError(
+                    f"{context}supporting_facts must contain EvidenceRef instances"
+                )
+            document = documents_by_title.get(fact.document_title)
+            if document is None:
+                raise HotpotQAValidationError(
+                    f"{context}supporting_facts reference unknown document {fact.document_title!r}"
+                )
             if fact.sentence_index >= len(document.sentences):
                 raise HotpotQAValidationError(
-                    f"question {self.question_id!r} has out-of-range supporting fact "
+                    f"{context}supporting_facts contain out-of-range index "
                     f"{fact.document_title!r}[{fact.sentence_index}]"
                 )
 
@@ -88,5 +101,5 @@ class QuestionExample:
             if document.title == title:
                 return document
         raise HotpotQAValidationError(
-            f"question {self.question_id!r} documents do not contain title {title!r}"
+            f"example {self.question_id!r}: documents do not contain title {title!r}"
         )
