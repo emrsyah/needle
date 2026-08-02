@@ -247,9 +247,10 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v8
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
+          version: "0.12.1"
           enable-cache: true
       - name: Install Python
         run: uv python install 3.11
@@ -408,29 +409,38 @@ Expected: `main` advances by fast-forward only and its HEAD exactly equals `$fea
 
 - [ ] **Step 5: Preflight GitHub CLI availability and authentication**
 
-Run: `gh --version`
+```powershell
+gh --version
+if ($LASTEXITCODE -ne 0) { throw "GitHub CLI is not available." }
+gh auth status
+if ($LASTEXITCODE -ne 0) { throw "GitHub CLI authentication is not ready." }
+$repository = gh repo view emrsyah/needle --json nameWithOwner --jq '.nameWithOwner'
+if ($LASTEXITCODE -ne 0) { throw "Could not resolve the GitHub repository." }
+if ($repository -cne "emrsyah/needle") { throw "GitHub CLI resolved unexpected repository: $repository" }
+```
 
-Expected: exit code 0 and an installed GitHub CLI version is printed.
+Expected: GitHub CLI is installed and authenticated, and `$repository` is exactly `emrsyah/needle`.
 
-Run: `gh auth status`
-
-Expected: exit code 0 and authentication to `github.com` is active for an account allowed to read Actions runs in `emrsyah/needle`.
-
-- [ ] **Step 6: Push the reviewed commit to `origin/main`**
+- [ ] **Step 6: Verify the push target and push the reviewed commit to `origin/main`**
 
 ```powershell
+$originPushUrls = @(git remote get-url --push --all origin)
+if ($LASTEXITCODE -ne 0) { throw "Could not resolve the origin push URL." }
+if ($originPushUrls.Count -ne 1 -or $originPushUrls[0] -cne "https://github.com/emrsyah/needle.git") {
+    throw "Origin push URL must be exactly https://github.com/emrsyah/needle.git."
+}
 git push origin main
 if ($LASTEXITCODE -ne 0) { throw "Push failed." }
 ```
 
-Expected: exit code 0 and `origin/main` advances to `$featureSha`.
+Expected: the sole origin push URL is exactly `https://github.com/emrsyah/needle.git`, then the push exits with code 0 and `origin/main` advances to `$featureSha`.
 
 - [ ] **Step 7: Locate the `ci.yml` run for the exact commit with bounded retry**
 
 ```powershell
 $runId = $null
 foreach ($attempt in 1..20) {
-    $runJson = gh run list --commit $featureSha --event push --branch main --workflow ci.yml --limit 20 --json databaseId,headSha,event,headBranch
+    $runJson = gh run list --repo emrsyah/needle --commit $featureSha --event push --branch main --workflow ci.yml --limit 20 --json databaseId,headSha,event,headBranch
     if ($LASTEXITCODE -ne 0) { throw "Could not query workflow runs." }
     try {
         $runs = @($runJson | ConvertFrom-Json)
@@ -463,7 +473,7 @@ Expected: `$runId` contains the database ID of the `ci.yml` push run whose `head
 - [ ] **Step 8: Watch the exact workflow run to completion**
 
 ```powershell
-gh run watch $runId --exit-status
+gh run watch $runId --repo emrsyah/needle --exit-status
 if ($LASTEXITCODE -ne 0) { throw "CI run $runId failed." }
 ```
 
@@ -472,17 +482,34 @@ Expected: exit code 0 and the `quality` job concludes with `success`.
 - [ ] **Step 9: Verify remote synchronization and the final clean state**
 
 ```powershell
-$qualityConclusion = gh run view $runId --json jobs --jq '.jobs[] | select(.name == "quality") | .conclusion'
+$qualityConclusion = gh run view $runId --repo emrsyah/needle --json jobs --jq '.jobs[] | select(.name == "quality") | .conclusion'
 if ($LASTEXITCODE -ne 0) { throw "Could not inspect CI job conclusion." }
 if ($qualityConclusion -ne "success") { throw "Quality job did not succeed." }
+$remoteMainLines = @(git ls-remote --heads https://github.com/emrsyah/needle.git refs/heads/main)
+if ($LASTEXITCODE -ne 0) { throw "Could not query live remote main." }
+$remoteMainLines = @($remoteMainLines | Where-Object { $_ -and $_.Trim() })
+if ($remoteMainLines.Count -ne 1) { throw "Expected exactly one live remote main reference." }
+$remoteMainFields = @($remoteMainLines[0] -split '\s+')
+if ($remoteMainFields.Count -ne 2 -or $remoteMainFields[1] -ne "refs/heads/main") {
+    throw "Live remote main response was malformed."
+}
+$liveRemoteSha = $remoteMainFields[0]
+if (-not $liveRemoteSha -or $liveRemoteSha -notmatch '^[0-9a-f]{40}$') {
+    throw "Live remote main did not return exactly one non-empty SHA."
+}
+if ($liveRemoteSha -ne $featureSha) { throw "Live remote main does not equal reviewed feature HEAD." }
+git fetch origin main
+if ($LASTEXITCODE -ne 0) { throw "Could not refresh origin/main." }
 $localSha = git rev-parse HEAD
 if ($LASTEXITCODE -ne 0 -or -not $localSha) { throw "Could not resolve local HEAD." }
 $remoteSha = git rev-parse origin/main
 if ($LASTEXITCODE -ne 0 -or -not $remoteSha) { throw "Could not resolve origin/main." }
-if ($localSha -ne $featureSha -or $remoteSha -ne $featureSha) { throw "Local main, origin/main, and reviewed feature HEAD are not synchronized." }
+if ($liveRemoteSha -ne $featureSha -or $localSha -ne $featureSha -or $remoteSha -ne $featureSha) {
+    throw "Live remote main, local main, origin/main, and reviewed feature HEAD are not synchronized."
+}
 $finalStatus = git status --porcelain
 if ($LASTEXITCODE -ne 0) { throw "Could not inspect final worktree." }
 if ($finalStatus) { throw "Final worktree is not clean." }
 ```
 
-Expected: the `quality` job succeeded, local `main` and `origin/main` both equal `$featureSha`, and the worktree is clean.
+Expected: the `quality` job succeeded, live remote `main`, refreshed `origin/main`, and local `main` all equal `$featureSha`, and the worktree is clean.
