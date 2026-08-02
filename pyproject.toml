@@ -7,8 +7,11 @@ requires-python = ">=3.11"
 dependencies = []
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27,<2"]
 build-backend = "hatchling.build"
+
+[tool.uv]
+build-constraint-dependencies = ["hatchling>=1.27,<2"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/needle"]
