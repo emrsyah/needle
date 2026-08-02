@@ -27,6 +27,20 @@ def test_tiny_hotpotqa_fixture_has_valid_two_hop_examples() -> None:
         [["Machu Picchu", 1], ["Peru", 1]],
         [["Galapagos Islands", 1], ["Ecuador", 1]],
     ]
+    expected_evidence = {
+        "needle-001": {
+            ("The Left Hand of Darkness", 1): "It was written by Ursula K. Le Guin.",
+            ("Ursula K. Le Guin", 1): "She was born in Berkeley, California, in the United States.",
+        },
+        "needle-002": {
+            ("Machu Picchu", 1): "It is located in Peru.",
+            ("Peru", 1): "Peru has a coastline on the Pacific Ocean.",
+        },
+        "needle-003": {
+            ("Galapagos Islands", 1): "They are part of Ecuador.",
+            ("Ecuador", 1): "Its capital city is Quito.",
+        },
+    }
 
     for example in examples:
         context = example["context"]
@@ -46,3 +60,6 @@ def test_tiny_hotpotqa_fixture_has_valid_two_hop_examples() -> None:
         sentences_by_title = {title: sentences for title, sentences in context}
         for title, index in supporting_facts:
             assert 0 <= index < len(sentences_by_title[title])
+        assert {
+            (title, index): sentences_by_title[title][index] for title, index in supporting_facts
+        } == expected_evidence[example["_id"]]
