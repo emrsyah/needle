@@ -48,22 +48,95 @@ def test_loads_fixture_into_ordered_domain_examples() -> None:
         "Pacific Ocean",
         "Quito",
     ]
-    first = examples[0]
-    assert [document.title for document in first.documents] == [
-        "The Left Hand of Darkness",
-        "Ursula K. Le Guin",
-        "Berkeley",
+    assert [example.question for example in examples] == [
+        "In which country was the author of The Left Hand of Darkness born?",
+        "Which ocean borders the country where Machu Picchu is located?",
+        "What is the capital of the country that contains the Galapagos Islands?",
     ]
-    assert first.documents[0].sentences == (
-        "The Left Hand of Darkness is a 1969 science fiction novel.",
-        "It was written by Ursula K. Le Guin.",
-    )
-    assert first.supporting_facts == frozenset(
-        {
-            EvidenceRef("The Left Hand of Darkness", 1),
-            EvidenceRef("Ursula K. Le Guin", 1),
-        }
-    )
+    assert [
+        [(document.title, document.sentences) for document in example.documents]
+        for example in examples
+    ] == [
+        [
+            (
+                "The Left Hand of Darkness",
+                (
+                    "The Left Hand of Darkness is a 1969 science fiction novel.",
+                    "It was written by Ursula K. Le Guin.",
+                ),
+            ),
+            (
+                "Ursula K. Le Guin",
+                (
+                    "Ursula K. Le Guin was an American author.",
+                    "She was born in Berkeley, California, in the United States.",
+                ),
+            ),
+            (
+                "Berkeley",
+                (
+                    "Berkeley is a city in California.",
+                    "It is located on the eastern shore of San Francisco Bay.",
+                ),
+            ),
+        ],
+        [
+            (
+                "Machu Picchu",
+                (
+                    "Machu Picchu is a 15th-century Inca citadel.",
+                    "It is located in Peru.",
+                ),
+            ),
+            (
+                "Peru",
+                (
+                    "Peru is a country in South America.",
+                    "Peru has a coastline on the Pacific Ocean.",
+                ),
+            ),
+            (
+                "Atlantic Ocean",
+                (
+                    "The Atlantic Ocean is the second-largest ocean.",
+                    "It lies between the Americas and Europe and Africa.",
+                ),
+            ),
+        ],
+        [
+            (
+                "Galapagos Islands",
+                (
+                    "The Galapagos Islands are an archipelago in the Pacific Ocean.",
+                    "They are part of Ecuador.",
+                ),
+            ),
+            (
+                "Ecuador",
+                (
+                    "Ecuador is a country in northwestern South America.",
+                    "Its capital city is Quito.",
+                ),
+            ),
+            (
+                "Guayaquil",
+                (
+                    "Guayaquil is Ecuador's largest city.",
+                    "It is a major port on the Guayas River.",
+                ),
+            ),
+        ],
+    ]
+    assert [example.supporting_facts for example in examples] == [
+        frozenset(
+            {
+                EvidenceRef("The Left Hand of Darkness", 1),
+                EvidenceRef("Ursula K. Le Guin", 1),
+            }
+        ),
+        frozenset({EvidenceRef("Machu Picchu", 1), EvidenceRef("Peru", 1)}),
+        frozenset({EvidenceRef("Galapagos Islands", 1), EvidenceRef("Ecuador", 1)}),
+    ]
 
 
 @pytest.mark.parametrize("field", ["_id", "question", "answer", "context", "supporting_facts"])
@@ -108,6 +181,17 @@ def test_rejects_empty_or_malformed_context(tmp_path: Path, context: object) -> 
         _load(_write_payload(tmp_path, payload))
 
 
+@pytest.mark.parametrize("entry", ["not a pair", {"title": "Ada Lovelace"}])
+def test_rejects_non_list_context_entry(tmp_path: Path, entry: object) -> None:
+    payload = _payload()
+    payload[0]["context"] = [entry]
+
+    with pytest.raises(
+        HotpotQAValidationError, match=r"example 0.*context\[0\].*exactly \[title, sentences\]"
+    ):
+        _load(_write_payload(tmp_path, payload))
+
+
 @pytest.mark.parametrize("title", ["", 1])
 def test_rejects_empty_or_nonstring_context_title(tmp_path: Path, title: object) -> None:
     payload = _payload()
@@ -147,6 +231,18 @@ def test_rejects_empty_or_malformed_supporting_facts(tmp_path: Path, facts: obje
         _load(_write_payload(tmp_path, payload))
 
 
+@pytest.mark.parametrize("entry", ["not a pair", {"title": "Ada Lovelace", "index": 1}])
+def test_rejects_non_list_supporting_fact_entry(tmp_path: Path, entry: object) -> None:
+    payload = _payload()
+    payload[0]["supporting_facts"] = [entry]
+
+    with pytest.raises(
+        HotpotQAValidationError,
+        match=r"example 0.*supporting_facts\[0\].*exactly \[title, index\]",
+    ):
+        _load(_write_payload(tmp_path, payload))
+
+
 @pytest.mark.parametrize("title", ["", 1, "Unknown"])
 def test_rejects_invalid_or_unknown_supporting_fact_title(tmp_path: Path, title: object) -> None:
     payload = _payload()
@@ -162,6 +258,18 @@ def test_rejects_invalid_supporting_fact_index(tmp_path: Path, index: object) ->
     payload[0]["supporting_facts"] = [["Ada Lovelace", index]]
 
     with pytest.raises(HotpotQAValidationError, match=r"example 0.*supporting_facts\[0\].*index"):
+        _load(_write_payload(tmp_path, payload))
+
+
+@pytest.mark.parametrize("index", [None, "1", 1.0])
+def test_rejects_noninteger_supporting_fact_index(tmp_path: Path, index: object) -> None:
+    payload = _payload()
+    payload[0]["supporting_facts"] = [["Ada Lovelace", index]]
+
+    with pytest.raises(
+        HotpotQAValidationError,
+        match=r"example 0.*supporting_facts\[0\].*index.*integer",
+    ):
         _load(_write_payload(tmp_path, payload))
 
 
