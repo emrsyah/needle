@@ -210,7 +210,7 @@ Expected: `All checks passed!`.
 
 Run: `uv run ruff format --check .`
 
-Expected: exit code 0 and Ruff reports that both Python files are already formatted.
+Expected: exit code 0 and Ruff reports all checked files are already formatted.
 
 - [ ] **Step 4: Run the complete test suite**
 
@@ -271,7 +271,7 @@ Expected: `All checks passed!`.
 
 Run: `uv run ruff format --check .`
 
-Expected: exit code 0 and Ruff reports that both Python files are already formatted.
+Expected: exit code 0 and Ruff reports all checked files are already formatted.
 
 Run: `uv run pytest`
 
