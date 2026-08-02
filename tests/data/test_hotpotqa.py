@@ -12,6 +12,11 @@ def test_tiny_hotpotqa_fixture_has_valid_two_hop_examples() -> None:
         for example in examples
     )
     assert [example["_id"] for example in examples] == ["needle-001", "needle-002", "needle-003"]
+    assert [example["question"] for example in examples] == [
+        "In which country was the author of The Left Hand of Darkness born?",
+        "Which ocean borders the country where Machu Picchu is located?",
+        "What is the capital of the country that contains the Galapagos Islands?",
+    ]
     assert [example["answer"] for example in examples] == [
         "United States",
         "Pacific Ocean",
