@@ -284,43 +284,6 @@ git add .github/workflows/ci.yml
 git commit -m "ci: verify Python project"
 ```
 
-- [ ] **Step 4: Push and validate the workflow on GitHub Actions**
-
-Run: `gh --version`
-
-Expected: exit code 0 and an installed GitHub CLI version is printed.
-
-Run: `gh auth status`
-
-Expected: exit code 0 and authentication to `github.com` is active for an account allowed to read Actions runs in `emrsyah/needle`.
-
-Capture the exact commit before pushing:
-
-```powershell
-$commitSha = git rev-parse HEAD
-if ($LASTEXITCODE -ne 0 -or -not $commitSha) { throw "Could not resolve HEAD." }
-git push origin main
-if ($LASTEXITCODE -ne 0) { throw "Push failed." }
-```
-
-Expected: exit code 0 and `origin/main` advances to the CI commit.
-
-Find the workflow run for that exact commit, allowing GitHub time to enqueue it:
-
-```powershell
-$runId = $null
-foreach ($attempt in 1..20) {
-    $runId = gh run list --commit $commitSha --workflow ci.yml --limit 1 --json databaseId --jq '.[0].databaseId'
-    if ($LASTEXITCODE -ne 0) { throw "Could not query workflow runs." }
-    if ($runId) { break }
-    Start-Sleep -Seconds 3
-}
-if (-not $runId) { throw "No CI run appeared for commit $commitSha." }
-gh run watch $runId --exit-status
-```
-
-Expected: exit code 0 and the `quality` job concludes with `success`.
-
 ### Task 5: Document the developer workflow
 
 **Files:**
@@ -388,4 +351,118 @@ git commit -m "docs: add development setup"
 
 Run: `git status --short --branch`
 
-Expected: clean `main` branch, ahead of `origin/main` by the final README commit until the final push.
+Expected: clean `chore/python-foundation` branch, ahead of `origin/main` by the completed foundation commits until integration.
+
+### Task 6: Integrate the reviewed branch and validate CI remotely
+
+- [ ] **Step 1: Verify the reviewed feature branch is clean and all local quality gates pass**
+
+Run: `git status --short --branch`
+
+Expected: clean `chore/python-foundation` branch with no staged or unstaged changes.
+
+Run: `uv run ruff check .`
+
+Expected: `All checks passed!`.
+
+Run: `uv run ruff format --check .`
+
+Expected: exit code 0 and Ruff reports all checked files are already formatted.
+
+Run: `uv run pytest`
+
+Expected: exit code 0 with `1 passed`.
+
+- [ ] **Step 2: Record the exact reviewed feature commit**
+
+```powershell
+$featureSha = git rev-parse HEAD
+if ($LASTEXITCODE -ne 0 -or -not $featureSha) { throw "Could not resolve feature HEAD." }
+```
+
+Expected: `$featureSha` contains the full commit SHA of the reviewed `chore/python-foundation` branch.
+
+- [ ] **Step 3: Switch to `main` and require its worktree to be clean**
+
+```powershell
+git switch main
+if ($LASTEXITCODE -ne 0) { throw "Could not switch to main." }
+$mainStatus = git status --porcelain
+if ($LASTEXITCODE -ne 0) { throw "Could not inspect main worktree." }
+if ($mainStatus) { throw "Main worktree is not clean." }
+```
+
+Expected: the current branch is `main` and its worktree has no staged, unstaged, or untracked changes.
+
+- [ ] **Step 4: Fast-forward `main` to the reviewed feature commit and verify the exact result**
+
+```powershell
+git merge --ff-only chore/python-foundation
+if ($LASTEXITCODE -ne 0) { throw "Fast-forward merge failed." }
+$mergedSha = git rev-parse HEAD
+if ($LASTEXITCODE -ne 0 -or -not $mergedSha) { throw "Could not resolve merged HEAD." }
+if ($mergedSha -ne $featureSha) { throw "Merged HEAD $mergedSha does not equal reviewed feature HEAD $featureSha." }
+```
+
+Expected: `main` advances by fast-forward only and its HEAD exactly equals `$featureSha`.
+
+- [ ] **Step 5: Preflight GitHub CLI availability and authentication**
+
+Run: `gh --version`
+
+Expected: exit code 0 and an installed GitHub CLI version is printed.
+
+Run: `gh auth status`
+
+Expected: exit code 0 and authentication to `github.com` is active for an account allowed to read Actions runs in `emrsyah/needle`.
+
+- [ ] **Step 6: Push the reviewed commit to `origin/main`**
+
+```powershell
+git push origin main
+if ($LASTEXITCODE -ne 0) { throw "Push failed." }
+```
+
+Expected: exit code 0 and `origin/main` advances to `$featureSha`.
+
+- [ ] **Step 7: Locate the `ci.yml` run for the exact commit with bounded retry**
+
+```powershell
+$runId = $null
+foreach ($attempt in 1..20) {
+    $runId = gh run list --commit $featureSha --workflow ci.yml --limit 1 --json databaseId --jq '.[0].databaseId'
+    if ($LASTEXITCODE -ne 0) { throw "Could not query workflow runs." }
+    if ($runId) { break }
+    Start-Sleep -Seconds 3
+}
+if (-not $runId) { throw "No CI run appeared for commit $featureSha." }
+```
+
+Expected: `$runId` contains the database ID of the `ci.yml` run whose commit is exactly `$featureSha`.
+
+- [ ] **Step 8: Watch the exact workflow run to completion**
+
+```powershell
+gh run watch $runId --exit-status
+if ($LASTEXITCODE -ne 0) { throw "CI run $runId failed." }
+```
+
+Expected: exit code 0 and the `quality` job concludes with `success`.
+
+- [ ] **Step 9: Verify remote synchronization and the final clean state**
+
+```powershell
+$qualityConclusion = gh run view $runId --json jobs --jq '.jobs[] | select(.name == "quality") | .conclusion'
+if ($LASTEXITCODE -ne 0) { throw "Could not inspect CI job conclusion." }
+if ($qualityConclusion -ne "success") { throw "Quality job did not succeed." }
+$localSha = git rev-parse HEAD
+if ($LASTEXITCODE -ne 0 -or -not $localSha) { throw "Could not resolve local HEAD." }
+$remoteSha = git rev-parse origin/main
+if ($LASTEXITCODE -ne 0 -or -not $remoteSha) { throw "Could not resolve origin/main." }
+if ($localSha -ne $featureSha -or $remoteSha -ne $featureSha) { throw "Local main, origin/main, and reviewed feature HEAD are not synchronized." }
+$finalStatus = git status --porcelain
+if ($LASTEXITCODE -ne 0) { throw "Could not inspect final worktree." }
+if ($finalStatus) { throw "Final worktree is not clean." }
+```
+
+Expected: the `quality` job succeeded, local `main` and `origin/main` both equal `$featureSha`, and the worktree is clean.
