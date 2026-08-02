@@ -88,7 +88,10 @@ def _load_supporting_facts(
         sentence_index = item[1]
         if isinstance(sentence_index, bool) or not isinstance(sentence_index, int):
             _error(
-                position, f"{item_field}.index", "must be an integer, not a boolean", question_id
+                position,
+                f"{item_field}.index",
+                "must be an integer (booleans are not allowed)",
+                question_id,
             )
         if sentence_index < 0 or sentence_index >= len(document.sentences):
             _error(position, f"{item_field}.index", "is out of range", question_id)
@@ -113,6 +116,7 @@ def load_hotpotqa(path: str | Path) -> tuple[QuestionExample, ...]:
         raise HotpotQAValidationError("top-level HotpotQA data must be a list")
 
     examples: list[QuestionExample] = []
+    seen_question_ids: dict[str, int] = {}
     for position, raw_example in enumerate(payload):
         if not isinstance(raw_example, dict):
             _error(position, "example", "must be an object")
@@ -122,6 +126,14 @@ def load_hotpotqa(path: str | Path) -> tuple[QuestionExample, ...]:
                 _error(position, field, "is required", raw_example.get("_id"))
 
         question_id = _non_empty_text(raw_example["_id"], position, "_id")
+        if question_id in seen_question_ids:
+            _error(
+                position,
+                "_id",
+                f"is a duplicate of earlier identifier at example {seen_question_ids[question_id]}",
+                question_id,
+            )
+        seen_question_ids[question_id] = position
         question = _non_empty_text(raw_example["question"], position, "question", question_id)
         answer = _non_empty_text(raw_example["answer"], position, "answer", question_id)
         documents = _load_documents(raw_example, position, question_id)

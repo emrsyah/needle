@@ -160,6 +160,16 @@ def test_rejects_empty_or_nonstring_core_text(tmp_path: Path, field: str, value:
         _load(_write_payload(tmp_path, payload))
 
 
+def test_rejects_duplicate_question_id_at_second_example(tmp_path: Path) -> None:
+    payload = _payload()
+    duplicate = _payload()[0]
+    duplicate["question"] = "Where did Ada live?"
+    payload.append(duplicate)
+
+    with pytest.raises(HotpotQAValidationError, match=r"example 1.*_id.*duplicate.*earlier"):
+        _load(_write_payload(tmp_path, payload))
+
+
 def test_rejects_non_list_top_level(tmp_path: Path) -> None:
     with pytest.raises(HotpotQAValidationError, match=r"top-level.*list"):
         _load(_write_payload(tmp_path, {"example": _payload()[0]}))
@@ -252,7 +262,7 @@ def test_rejects_invalid_or_unknown_supporting_fact_title(tmp_path: Path, title:
         _load(_write_payload(tmp_path, payload))
 
 
-@pytest.mark.parametrize("index", [True, -1, 2])
+@pytest.mark.parametrize("index", [-1, 2])
 def test_rejects_invalid_supporting_fact_index(tmp_path: Path, index: object) -> None:
     payload = _payload()
     payload[0]["supporting_facts"] = [["Ada Lovelace", index]]
@@ -261,14 +271,17 @@ def test_rejects_invalid_supporting_fact_index(tmp_path: Path, index: object) ->
         _load(_write_payload(tmp_path, payload))
 
 
-@pytest.mark.parametrize("index", [None, "1", 1.0])
+@pytest.mark.parametrize("index", [True, None, "1", 1.0])
 def test_rejects_noninteger_supporting_fact_index(tmp_path: Path, index: object) -> None:
     payload = _payload()
     payload[0]["supporting_facts"] = [["Ada Lovelace", index]]
 
     with pytest.raises(
         HotpotQAValidationError,
-        match=r"example 0.*supporting_facts\[0\].*index.*integer",
+        match=(
+            r"example 0.*supporting_facts\[0\].*index.*"
+            r"must be an integer \(booleans are not allowed\)"
+        ),
     ):
         _load(_write_payload(tmp_path, payload))
 
