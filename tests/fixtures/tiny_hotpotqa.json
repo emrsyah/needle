@@ -1,0 +1,35 @@
+[
+  {
+    "_id": "needle-001",
+    "question": "In which country was the author of The Left Hand of Darkness born?",
+    "answer": "United States",
+    "context": [
+      ["The Left Hand of Darkness", ["The Left Hand of Darkness is a 1969 science fiction novel.", "It was written by Ursula K. Le Guin."]],
+      ["Ursula K. Le Guin", ["Ursula K. Le Guin was an American author.", "She was born in Berkeley, California, in the United States."]],
+      ["Berkeley", ["Berkeley is a city in California.", "It is located on the eastern shore of San Francisco Bay."]]
+    ],
+    "supporting_facts": [["The Left Hand of Darkness", 1], ["Ursula K. Le Guin", 1]]
+  },
+  {
+    "_id": "needle-002",
+    "question": "Which ocean borders the country where Machu Picchu is located?",
+    "answer": "Pacific Ocean",
+    "context": [
+      ["Machu Picchu", ["Machu Picchu is a 15th-century Inca citadel.", "It is located in Peru."]],
+      ["Peru", ["Peru is a country in South America.", "Peru has a coastline on the Pacific Ocean."]],
+      ["Atlantic Ocean", ["The Atlantic Ocean is the second-largest ocean.", "It lies between the Americas and Europe and Africa."]]
+    ],
+    "supporting_facts": [["Machu Picchu", 1], ["Peru", 1]]
+  },
+  {
+    "_id": "needle-003",
+    "question": "What is the capital of the country that contains the Galapagos Islands?",
+    "answer": "Quito",
+    "context": [
+      ["Galapagos Islands", ["The Galapagos Islands are an archipelago in the Pacific Ocean.", "They are part of Ecuador."]],
+      ["Ecuador", ["Ecuador is a country in northwestern South America.", "Its capital city is Quito."]],
+      ["Guayaquil", ["Guayaquil is Ecuador's largest city.", "It is a major port on the Guayas River."]]
+    ],
+    "supporting_facts": [["Galapagos Islands", 1], ["Ecuador", 1]]
+  }
+]
