@@ -398,7 +398,7 @@ Expected: the current branch is `main` and its worktree has no staged, unstaged,
 - [ ] **Step 4: Fast-forward `main` to the reviewed feature commit and verify the exact result**
 
 ```powershell
-git merge --ff-only chore/python-foundation
+git merge --ff-only $featureSha
 if ($LASTEXITCODE -ne 0) { throw "Fast-forward merge failed." }
 $mergedSha = git rev-parse HEAD
 if ($LASTEXITCODE -ne 0 -or -not $mergedSha) { throw "Could not resolve merged HEAD." }
