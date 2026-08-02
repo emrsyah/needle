@@ -128,7 +128,7 @@ def test_package_exposes_version() -> None:
 
 Run: `uv run --no-sync pytest tests/test_package.py -v`
 
-Expected: exit code 2, zero collected tests, and collection fails with `ModuleNotFoundError: No module named 'needle'`.
+Expected: exit code 1, zero collected tests, and collection fails with `ModuleNotFoundError: No module named 'needle'`.
 
 - [ ] **Step 4: Add the minimal package implementation**
 
