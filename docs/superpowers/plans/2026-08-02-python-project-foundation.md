@@ -193,11 +193,11 @@ Thumbs.db
 !.env.example
 
 # Research artifacts
-data/
-artifacts/
-checkpoints/
-outputs/
-wandb/
+/data/
+/artifacts/
+/checkpoints/
+/outputs/
+/wandb/
 ```
 
 - [ ] **Step 2: Run linting**
