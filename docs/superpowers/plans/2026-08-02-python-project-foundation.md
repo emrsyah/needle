@@ -430,15 +430,35 @@ Expected: exit code 0 and `origin/main` advances to `$featureSha`.
 ```powershell
 $runId = $null
 foreach ($attempt in 1..20) {
-    $runId = gh run list --commit $featureSha --workflow ci.yml --limit 1 --json databaseId --jq '.[0].databaseId'
+    $runJson = gh run list --commit $featureSha --event push --branch main --workflow ci.yml --limit 20 --json databaseId,headSha,event,headBranch
     if ($LASTEXITCODE -ne 0) { throw "Could not query workflow runs." }
-    if ($runId) { break }
+    try {
+        $runs = @($runJson | ConvertFrom-Json)
+    } catch {
+        throw "Could not parse workflow run response."
+    }
+    $matchingRuns = @(
+        $runs | Where-Object {
+            $_.headSha -eq $featureSha -and
+            $_.event -eq "push" -and
+            $_.headBranch -eq "main"
+        }
+    )
+    if ($matchingRuns.Count -gt 0) {
+        $run = $matchingRuns | Select-Object -First 1
+        if (-not $run.databaseId) { throw "Matching workflow run has no database ID." }
+        if ($run.headSha -ne $featureSha -or $run.event -ne "push" -or $run.headBranch -ne "main") {
+            throw "Selected workflow run does not match the reviewed main push."
+        }
+        $runId = $run.databaseId
+        break
+    }
     Start-Sleep -Seconds 3
 }
-if (-not $runId) { throw "No CI run appeared for commit $featureSha." }
+if (-not $runId) { throw "No main push CI run appeared for commit $featureSha." }
 ```
 
-Expected: `$runId` contains the database ID of the `ci.yml` run whose commit is exactly `$featureSha`.
+Expected: `$runId` contains the database ID of the `ci.yml` push run whose `headSha` is exactly `$featureSha` and whose `headBranch` is `main`.
 
 - [ ] **Step 8: Watch the exact workflow run to completion**
 
