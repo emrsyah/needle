@@ -116,9 +116,7 @@ def retrieval_recall(example: QuestionExample, trajectory: EpisodeTrajectory) ->
     retrieved_titles = {
         result.document.title for search in trajectory.searches for result in search.results
     }
-    exposed = {
-        fact for fact in example.supporting_facts if fact.document_title in retrieved_titles
-    }
+    exposed = {fact for fact in example.supporting_facts if fact.document_title in retrieved_titles}
     return len(exposed) / len(example.supporting_facts)
 
 
@@ -142,13 +140,9 @@ def information_gain(example: QuestionExample, trajectory: EpisodeTrajectory) ->
     gains: list[float] = []
     total = len(example.supporting_facts)
     for search in trajectory.searches:
-        before = {
-            fact for fact in example.supporting_facts if fact.document_title in seen_titles
-        }
+        before = {fact for fact in example.supporting_facts if fact.document_title in seen_titles}
         seen_titles.update(result.document.title for result in search.results)
-        after = {
-            fact for fact in example.supporting_facts if fact.document_title in seen_titles
-        }
+        after = {fact for fact in example.supporting_facts if fact.document_title in seen_titles}
         gains.append((len(after) - len(before)) / total)
     return tuple(gains)
 
@@ -173,9 +167,7 @@ def evaluate(
     metrics = dict(
         answer_exact_match=answer_exact_match(trajectory.answer.answer, example.gold_answer),
         answer_f1=answer_f1(trajectory.answer.answer, example.gold_answer),
-        evidence_coverage=evidence_coverage(
-            example.supporting_facts, trajectory.answer.citations
-        ),
+        evidence_coverage=evidence_coverage(example.supporting_facts, trajectory.answer.citations),
         citation_precision=citation_precision(
             example.supporting_facts, trajectory.answer.citations
         ),
