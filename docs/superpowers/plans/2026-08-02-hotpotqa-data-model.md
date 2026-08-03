@@ -276,8 +276,7 @@ class QuestionExample:
             document = documents_by_title.get(fact.document_title)
             if document is None:
                 raise HotpotQAValidationError(
-                    f"{context}supporting_facts references unknown document "
-                    f"{fact.document_title!r}"
+                    f"{context}supporting_facts references unknown document {fact.document_title!r}"
                 )
             if fact.sentence_index >= len(document.sentences):
                 raise HotpotQAValidationError(
@@ -338,8 +337,7 @@ def test_fixture_has_three_multi_hop_examples_with_distractors() -> None:
 
     assert [item["_id"] for item in raw] == ["needle-001", "needle-002", "needle-003"]
     assert all(
-        {"_id", "question", "answer", "context", "supporting_facts"} <= item.keys()
-        for item in raw
+        {"_id", "question", "answer", "context", "supporting_facts"} <= item.keys() for item in raw
     )
     assert all(len(item["context"]) == 3 for item in raw)
     assert all(len(item["supporting_facts"]) == 2 for item in raw)
@@ -477,9 +475,7 @@ def test_load_hotpotqa_preserves_order_answer_and_supporting_facts() -> None:
 
 
 @pytest.mark.parametrize("field", ["_id", "question", "answer", "context", "supporting_facts"])
-def test_load_hotpotqa_rejects_missing_required_field(
-    tmp_path: Path, field: str
-) -> None:
+def test_load_hotpotqa_rejects_missing_required_field(tmp_path: Path, field: str) -> None:
     payload = {key: value for key, value in VALID_EXAMPLE.items() if key != field}
 
     with pytest.raises(HotpotQAValidationError, match=rf"{field}.*required"):
@@ -521,15 +517,27 @@ def test_load_hotpotqa_ignores_additional_official_fields(tmp_path: Path) -> Non
         ([{**VALID_EXAMPLE, "context": [["Title", []]]}], r"context\[0\].*sentences.*non-empty"),
         ([{**VALID_EXAMPLE, "context": [["", ["Sentence."]]]}], r"context\[0\].*title.*non-empty"),
         ([{**VALID_EXAMPLE, "context": [[42, ["Sentence."]]]}], r"context\[0\].*title.*non-empty"),
-        ([{**VALID_EXAMPLE, "context": [["Repeated", ["One."]], ["Repeated", ["Two."]]]}], r"duplicate.*title"),
+        (
+            [{**VALID_EXAMPLE, "context": [["Repeated", ["One."]], ["Repeated", ["Two."]]]}],
+            r"duplicate.*title",
+        ),
         ([{**VALID_EXAMPLE, "context": [["Title", [""]]]}], r"context\[0\].*sentence.*non-empty"),
         ([{**VALID_EXAMPLE, "supporting_facts": []}], r"supporting_facts.*non-empty"),
-        ([{**VALID_EXAMPLE, "supporting_facts": [["Bad"]]}], r"supporting_facts\[0\].*title.*index"),
+        (
+            [{**VALID_EXAMPLE, "supporting_facts": [["Bad"]]}],
+            r"supporting_facts\[0\].*title.*index",
+        ),
         ([{**VALID_EXAMPLE, "supporting_facts": [["Missing", 0]]}], r"unknown document"),
-        ([{**VALID_EXAMPLE, "supporting_facts": [["Supporting A", True]]}], r"sentence_index.*integer"),
+        (
+            [{**VALID_EXAMPLE, "supporting_facts": [["Supporting A", True]]}],
+            r"sentence_index.*integer",
+        ),
         ([{**VALID_EXAMPLE, "supporting_facts": [["Supporting A", -1]]}], r"sentence_index.*range"),
         ([{**VALID_EXAMPLE, "supporting_facts": [["Supporting A", 1]]}], r"sentence_index.*range"),
-        ([{**VALID_EXAMPLE, "supporting_facts": [["Supporting A", 0], ["Supporting A", 0]]}], r"duplicate.*supporting fact"),
+        (
+            [{**VALID_EXAMPLE, "supporting_facts": [["Supporting A", 0], ["Supporting A", 0]]}],
+            r"duplicate.*supporting fact",
+        ),
     ],
 )
 def test_load_hotpotqa_rejects_invalid_payload(
@@ -568,9 +576,7 @@ from .models import Document, EvidenceRef, HotpotQAValidationError, QuestionExam
 
 def _error(position: int, example_id: object, field: str, detail: str) -> HotpotQAValidationError:
     identity = repr(example_id) if isinstance(example_id, str) and example_id else "unknown id"
-    return HotpotQAValidationError(
-        f"example {position} ({identity}) field {field!r}: {detail}"
-    )
+    return HotpotQAValidationError(f"example {position} ({identity}) field {field!r}: {detail}")
 
 
 def _required(raw: dict[str, object], position: int, field: str) -> object:
