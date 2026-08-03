@@ -35,6 +35,7 @@ def build_prompt(environment: SearchEnvironment, feedback: str | None = None) ->
             "Copy citation titles exactly as shown in the search results, including "
             "punctuation and accents."
         ),
+        "Never invent a document title; use CITATIONS[] when no citation can be validated.",
         "Use only the supplied search results for citations.",
         f"Question: {environment.example.question}",
         "Search results so far:",
@@ -50,10 +51,20 @@ def build_prompt(environment: SearchEnvironment, feedback: str | None = None) ->
                 f"{index}: {sentence}" for index, sentence in enumerate(document.sentences)
             )
     if feedback is not None:
+        retrieved_titles = tuple(
+            dict.fromkeys(
+                result.document.title
+                for observation in environment.history
+                for result in observation.results
+            )
+        )
         lines.extend(
             (
                 "Validator feedback: the previous action was rejected.",
                 f"{feedback}",
+                "Valid citation titles from retrieved results (copy exactly):",
+                *(f"- {title}" for title in retrieved_titles),
+                "Use CITATIONS[] if no valid title and sentence index can be selected.",
                 "Return one corrected action only.",
             )
         )

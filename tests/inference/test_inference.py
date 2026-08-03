@@ -195,8 +195,10 @@ def test_runner_retries_parser_error_with_validator_feedback() -> None:
 
 def test_runner_retries_invalid_citation_with_validator_feedback() -> None:
     example = load_hotpotqa(FIXTURE_PATH)[0]
+    prompts = []
     responses = iter(
         (
+            "SEARCH[Ursula]",
             "ANSWER[United States] CITATIONS[Ursula K. Le Guin|99]",
             "ANSWER[United States] CITATIONS[Ursula K. Le Guin|1]",
         )
@@ -204,6 +206,7 @@ def test_runner_retries_invalid_citation_with_validator_feedback() -> None:
 
     class RetryingClient:
         def complete(self, messages):
+            prompts.append(messages[0]["content"])
             return CompletionResult(
                 next(responses), "id", "mock", None, CompletionUsage(1, 1, 2), "{}"
             )
@@ -213,6 +216,9 @@ def test_runner_retries_invalid_citation_with_validator_feedback() -> None:
     )
 
     assert trajectory.answer.citations == (EvidenceRef("Ursula K. Le Guin", 1),)
+    assert "Valid citation titles from retrieved results" in prompts[2]
+    assert "- Ursula K. Le Guin" in prompts[2]
+    assert "Use CITATIONS[] if no valid title" in prompts[2]
 
 
 def test_runner_canonicalizes_harmless_citation_title_variation() -> None:
