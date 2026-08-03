@@ -20,7 +20,7 @@ results = retriever.search("Pacific Ocean coastline", top_k=2)
 ## Text and Ranking
 
 - Indexed text is the document title followed by all sentences.
-- Tokenization uses Unicode word tokens after `casefold()`; punctuation separates terms.
+- Tokenization uses Unicode letter/number word tokens after `casefold()`; punctuation and underscores separate terms.
 - Corpus and query use the same tokenizer.
 - Ranking sorts by descending BM25 score, then original corpus position for deterministic ties.
 - A query with no matching terms still returns deterministic zero-scored top-k documents, matching ordinary top-k retrieval behavior.
@@ -28,7 +28,7 @@ results = retriever.search("Pacific Ocean coastline", top_k=2)
 
 ## Validation
 
-- Corpus must be a non-empty sequence of `Document` objects with unique exact titles.
+- Corpus must be a non-empty sequence of `Document` objects with unique exact titles, and each title-plus-sentences text must yield at least one searchable token.
 - Query must be a string producing at least one token.
 - `top_k` must be a positive integer and must reject booleans.
 

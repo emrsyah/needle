@@ -8,7 +8,7 @@ from rank_bm25 import BM25Okapi
 
 from needle.data import Document
 
-_WORD_TOKEN_PATTERN = re.compile(r"\w+", re.UNICODE)
+_WORD_TOKEN_PATTERN = re.compile(r"[^\W_]+", re.UNICODE)
 
 
 def tokenize(text: str) -> tuple[str, ...]:
@@ -46,9 +46,14 @@ class BM25Retriever:
                 raise ValueError(f"documents contain duplicate title: {document.title!r}")
             seen_titles.add(document.title)
 
-        corpus = [
-            tokenize(" ".join((document.title, *document.sentences))) for document in self.documents
-        ]
+        corpus: list[tuple[str, ...]] = []
+        for document in self.documents:
+            tokens = tokenize(" ".join((document.title, *document.sentences)))
+            if not tokens:
+                raise ValueError(
+                    f"document {document.title!r} must contain at least one searchable token"
+                )
+            corpus.append(tokens)
         self._index = BM25Okapi(corpus)
 
     def search(self, query: str, top_k: int = 5) -> tuple[SearchResult, ...]:

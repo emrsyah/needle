@@ -23,9 +23,9 @@
 - Create: `tests/retrieval/test_bm25.py`
 
 - [ ] Add runtime dependency `rank-bm25>=0.2.2,<0.3` with uv and update the lockfile.
-- [ ] Implement `tokenize(text: str) -> tuple[str, ...]` using `casefold()` and Unicode word tokens.
+- [ ] Implement `tokenize(text: str) -> tuple[str, ...]` using `casefold()` and Unicode letter/number word tokens, with punctuation and underscores as separators.
 - [ ] Implement frozen, slotted `SearchResult(rank: int, score: float, document: Document)`.
-- [ ] Implement `BM25Retriever(documents)` with a non-empty immutable corpus, exact unique titles, title-plus-sentences indexing, and `BM25Okapi` scoring.
+- [ ] Implement `BM25Retriever(documents)` with a non-empty immutable corpus, exact unique titles, nonempty searchable title-plus-sentences tokens per document, and `BM25Okapi` scoring.
 - [ ] Implement `search(query, top_k=5)` with query/top-k validation, descending scores, input-position tie breaks, and corpus-size capping.
 - [ ] Re-export `BM25Retriever`, `SearchResult`, and `tokenize` from `needle.retrieval` through exact `__all__`.
 - [ ] Test tokenizer case/punctuation behavior, corpus validation, query/top-k validation including bool, original object identity, score/rank types, expected HotpotQA fixture retrieval, top-k capping, and deterministic zero-score ties.

@@ -25,6 +25,7 @@ def test_tokenize_casefolds_punctuation_and_unicode() -> None:
         "\u6771\u4eac",
         "\u043f\u0440\u0438\u0432\u0435\u0442",
     )
+    assert tokenize("snake_case") == ("snake", "case")
 
 
 def test_tokenize_rejects_non_string() -> None:
@@ -101,3 +102,11 @@ def test_targeted_fixture_queries_rank_each_intended_support_first(
     assert (
         BM25Retriever(example.documents).search(query, top_k=1)[0].document.title == expected_title
     )
+
+
+def test_rejects_documents_without_searchable_tokens() -> None:
+    punctuation_only = Document("...?!", ("---",))
+    with pytest.raises(ValueError, match=r"document .*\.\.\.\?!.*searchable token"):
+        BM25Retriever((punctuation_only,))
+    with pytest.raises(ValueError, match=r"document .*\.\.\.\?!.*searchable token"):
+        BM25Retriever((_documents()[0], punctuation_only))
