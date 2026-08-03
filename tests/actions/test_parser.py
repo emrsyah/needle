@@ -2,7 +2,13 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from needle.actions import ActionParseError, AnswerAction, SearchAction, parse_action
+from needle.actions import (
+    ActionParseError,
+    AnswerAction,
+    SearchAction,
+    canonicalize_citation_title,
+    parse_action,
+)
 from needle.data import EvidenceRef
 
 
@@ -61,6 +67,31 @@ def test_rejects_non_string_input() -> None:
 def test_parser_does_not_require_citation_retrieval_or_corpus_validation() -> None:
     action = parse_action("ANSWER[Canada] CITATIONS[Not Retrieved|99]")
     assert action.citations == (EvidenceRef("Not Retrieved", 99),)
+
+
+@pytest.mark.parametrize(
+    ("provided", "expected"),
+    [
+        ("Ursula K. Le Guin", "Ursula K. Le Guin"),
+        (" ursula k le guin ", "Ursula K. Le Guin"),
+        ("The Left–Hand of ‘Darkness’", "The Left-Hand of 'Darkness'"),
+    ],
+)
+def test_canonicalizes_unique_harmless_title_variations(provided: str, expected: str) -> None:
+    assert canonicalize_citation_title(provided, (expected, "Berkeley")) == expected
+
+
+def test_canonicalization_rejects_ambiguous_or_unknown_titles() -> None:
+    titles = ("A/B", "A-B", "Known")
+
+    assert canonicalize_citation_title("A B", titles) is None
+    assert canonicalize_citation_title("Unrelated", titles) is None
+
+
+def test_canonicalization_does_not_create_incorrect_aliases() -> None:
+    titles = ("The Office (US)", "The Office (UK)")
+
+    assert canonicalize_citation_title("The Office", titles) is None
 
 
 def test_actions_are_immutable_and_slotted() -> None:

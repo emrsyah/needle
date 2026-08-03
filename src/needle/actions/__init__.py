@@ -14,6 +14,8 @@ Corpus and retrieval validation remain responsibilities of SearchEnvironment.
 """
 
 import re
+import unicodedata
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from needle.data import EvidenceRef
@@ -42,6 +44,46 @@ class AnswerAction:
 
     answer: str
     citations: tuple[EvidenceRef, ...]
+
+
+def _normalize_citation_title(title: str) -> str:
+    """Normalize only harmless title formatting differences."""
+    normalized = unicodedata.normalize("NFKC", title).casefold()
+    characters = [
+        character
+        for character in normalized
+        if character.isspace() or unicodedata.category(character)[0] in {"L", "N"}
+    ]
+    return " ".join("".join(characters).split())
+
+
+def canonicalize_citation_title(provided_title: str, corpus_titles: Sequence[str]) -> str | None:
+    """Return a corpus title for a unique, harmlessly normalized title match.
+
+    Exact titles are preserved. Otherwise, case, Unicode normalization,
+    punctuation, and whitespace are ignored. A normalized key that maps to
+    more than one corpus title is intentionally rejected as ambiguous.
+    """
+    if not isinstance(provided_title, str):
+        raise TypeError("provided_title must be a string")
+
+    titles = tuple(corpus_titles)
+    if any(not isinstance(title, str) for title in titles):
+        raise TypeError("corpus_titles must contain strings")
+
+    exact_matches = tuple(title for title in titles if title == provided_title)
+    if len(exact_matches) == 1:
+        return exact_matches[0]
+    if len(exact_matches) > 1:
+        return None
+
+    normalized_title = _normalize_citation_title(provided_title)
+    if not normalized_title:
+        return None
+    candidates = tuple(
+        title for title in titles if _normalize_citation_title(title) == normalized_title
+    )
+    return candidates[0] if len(candidates) == 1 else None
 
 
 def _parse_citations(raw: str) -> tuple[EvidenceRef, ...]:
@@ -91,4 +133,10 @@ def parse_action(text: str) -> SearchAction | AnswerAction:
     return AnswerAction(payload, _parse_citations(match.group("citations") or ""))
 
 
-__all__ = ["ActionParseError", "AnswerAction", "SearchAction", "parse_action"]
+__all__ = [
+    "ActionParseError",
+    "AnswerAction",
+    "SearchAction",
+    "canonicalize_citation_title",
+    "parse_action",
+]

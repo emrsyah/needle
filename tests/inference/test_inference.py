@@ -155,6 +155,7 @@ def test_prompt_is_deterministic_and_runner_completes_fake_episode() -> None:
                 assert "Search results so far:\n(none)" in prompt
                 assert "Ursula K. Le Guin|1; The Left Hand of Darkness|1" in prompt
                 assert "after the final closing bracket" in prompt
+                assert "Copy citation titles exactly as shown" in prompt
             prompts.append(prompt)
             return CompletionResult(
                 next(responses), "id", "mock", None, CompletionUsage(1, 1, 2), "{}"
@@ -163,6 +164,71 @@ def test_prompt_is_deterministic_and_runner_completes_fake_episode() -> None:
     trajectory = EpisodeRunner(FakeClient()).run(environment)  # type: ignore[arg-type]
     assert trajectory.answer.citations == (EvidenceRef("Ursula K. Le Guin", 1),)
     assert len(prompts) == 2
+
+
+def test_runner_retries_parser_error_with_validator_feedback() -> None:
+    example = load_hotpotqa(FIXTURE_PATH)[0]
+    prompts = []
+    responses = iter(
+        (
+            "ANSWER[United States] CITATIONS[Ursula K. Le Guin|1] trailing",
+            "ANSWER[United States] CITATIONS[Ursula K. Le Guin|1]",
+        )
+    )
+
+    class RetryingClient:
+        def complete(self, messages):
+            prompts.append(messages[0]["content"])
+            return CompletionResult(
+                next(responses), "id", "mock", None, CompletionUsage(1, 1, 2), "{}"
+            )
+
+    trajectory = EpisodeRunner(RetryingClient(), max_retries=1).run(  # type: ignore[arg-type]
+        SearchEnvironment(example, top_k=1, max_searches=1)
+    )
+
+    assert trajectory.answer.answer == "United States"
+    assert len(prompts) == 2
+    assert "Validator feedback: the previous action was rejected." in prompts[1]
+    assert "action does not match the Needle action grammar" in prompts[1]
+
+
+def test_runner_retries_invalid_citation_with_validator_feedback() -> None:
+    example = load_hotpotqa(FIXTURE_PATH)[0]
+    responses = iter(
+        (
+            "ANSWER[United States] CITATIONS[Ursula K. Le Guin|99]",
+            "ANSWER[United States] CITATIONS[Ursula K. Le Guin|1]",
+        )
+    )
+
+    class RetryingClient:
+        def complete(self, messages):
+            return CompletionResult(
+                next(responses), "id", "mock", None, CompletionUsage(1, 1, 2), "{}"
+            )
+
+    trajectory = EpisodeRunner(RetryingClient(), max_retries=1).run(  # type: ignore[arg-type]
+        SearchEnvironment(example, top_k=1, max_searches=1)
+    )
+
+    assert trajectory.answer.citations == (EvidenceRef("Ursula K. Le Guin", 1),)
+
+
+def test_runner_canonicalizes_harmless_citation_title_variation() -> None:
+    example = load_hotpotqa(FIXTURE_PATH)[0]
+    environment = SearchEnvironment(example, top_k=1, max_searches=1)
+    responses = iter(("SEARCH[Ursula]", "ANSWER[United States] CITATIONS[ ursula k. le guin | 1 ]"))
+
+    class FakeClient:
+        def complete(self, messages):
+            return CompletionResult(
+                next(responses), "id", "mock", None, CompletionUsage(1, 1, 2), "{}"
+            )
+
+    trajectory = EpisodeRunner(FakeClient(), max_turns=2).run(environment)  # type: ignore[arg-type]
+
+    assert trajectory.answer.citations == (EvidenceRef("Ursula K. Le Guin", 1),)
 
 
 def test_runner_reports_malformed_output_and_exhaustion() -> None:

@@ -1,6 +1,13 @@
 """One-action-at-a-time model episode execution."""
 
-from needle.actions import ActionParseError, AnswerAction, SearchAction, parse_action
+from needle.actions import (
+    ActionParseError,
+    AnswerAction,
+    SearchAction,
+    canonicalize_citation_title,
+    parse_action,
+)
+from needle.data import EvidenceRef
 from needle.environment import EpisodeTrajectory, SearchEnvironment, SearchEnvironmentError
 
 from .client import CompletionResult, OpenRouterClient, OpenRouterError
@@ -10,7 +17,7 @@ class EpisodeRunnerError(RuntimeError):
     """Raised when a model episode cannot produce a valid completed trajectory."""
 
 
-def build_prompt(environment: SearchEnvironment) -> str:
+def build_prompt(environment: SearchEnvironment, feedback: str | None = None) -> str:
     """Create the deterministic prompt from the question and search history."""
     lines = [
         "You are a careful evidence-seeking QA agent.",
@@ -24,6 +31,10 @@ def build_prompt(environment: SearchEnvironment) -> str:
             "never comma-separated indices."
         ),
         "Do not add a period, explanation, or any text after the final closing bracket.",
+        (
+            "Copy citation titles exactly as shown in the search results, including "
+            "punctuation and accents."
+        ),
         "Use only the supplied search results for citations.",
         f"Question: {environment.example.question}",
         "Search results so far:",
@@ -38,15 +49,35 @@ def build_prompt(environment: SearchEnvironment) -> str:
             lines.extend(
                 f"{index}: {sentence}" for index, sentence in enumerate(document.sentences)
             )
+    if feedback is not None:
+        lines.extend(
+            (
+                "Validator feedback: the previous action was rejected.",
+                f"{feedback}",
+                "Return one corrected action only.",
+            )
+        )
     return "\n".join(lines)
 
 
 class EpisodeRunner:
     """Drive a SearchEnvironment with one completion for each model action."""
 
-    def __init__(self, client: OpenRouterClient, max_turns: int | None = None) -> None:
+    def __init__(
+        self,
+        client: OpenRouterClient,
+        max_turns: int | None = None,
+        max_retries: int = 0,
+    ) -> None:
         self.client = client
+        if max_turns is not None and (
+            isinstance(max_turns, bool) or not isinstance(max_turns, int) or max_turns <= 0
+        ):
+            raise ValueError("max_turns must be a positive integer or None")
+        if isinstance(max_retries, bool) or not isinstance(max_retries, int) or max_retries < 0:
+            raise ValueError("max_retries must be a non-negative integer")
         self.max_turns = max_turns
+        self.max_retries = max_retries
 
     def run(self, environment: SearchEnvironment) -> EpisodeTrajectory:
         environment.reset()
@@ -56,24 +87,44 @@ class EpisodeRunner:
         if max_turns <= 0:
             raise EpisodeRunnerError("max_turns must be positive")
         for _ in range(max_turns):
-            try:
-                completion: CompletionResult = self.client.complete(
-                    ({"role": "user", "content": build_prompt(environment)},)
-                )
-                action = parse_action(completion.text)
-            except (OpenRouterError, ActionParseError, TypeError, ValueError) as error:
-                raise EpisodeRunnerError(f"model action failed: {error}") from error
-            try:
-                if isinstance(action, SearchAction):
-                    environment.search(action.query)
-                elif isinstance(action, AnswerAction):
-                    environment.answer(action.answer, action.citations)
-                    trajectory = environment.trajectory
-                    if trajectory is None:
-                        raise AssertionError("answer should create a trajectory")
-                    return trajectory
-            except SearchEnvironmentError as error:
-                raise EpisodeRunnerError(f"invalid environment action: {error}") from error
+            feedback: str | None = None
+            for attempt in range(self.max_retries + 1):
+                try:
+                    completion: CompletionResult = self.client.complete(
+                        ({"role": "user", "content": build_prompt(environment, feedback)},)
+                    )
+                    action = parse_action(completion.text)
+                    if isinstance(action, SearchAction):
+                        environment.search(action.query)
+                    elif isinstance(action, AnswerAction):
+                        corpus_titles = tuple(
+                            document.title for document in environment.example.documents
+                        )
+                        canonical_citations = tuple(
+                            EvidenceRef(
+                                canonicalize_citation_title(citation.document_title, corpus_titles)
+                                or citation.document_title,
+                                citation.sentence_index,
+                            )
+                            for citation in action.citations
+                        )
+                        environment.answer(action.answer, canonical_citations)
+                        trajectory = environment.trajectory
+                        if trajectory is None:
+                            raise AssertionError("answer should create a trajectory")
+                        return trajectory
+                    break
+                except OpenRouterError as error:
+                    raise EpisodeRunnerError(f"model action failed: {error}") from error
+                except (ActionParseError, SearchEnvironmentError, TypeError, ValueError) as error:
+                    if attempt == self.max_retries:
+                        message = (
+                            "model action failed"
+                            if isinstance(error, (ActionParseError, TypeError, ValueError))
+                            else "invalid environment action"
+                        )
+                        raise EpisodeRunnerError(f"{message}: {error}") from error
+                    feedback = str(error)
         raise EpisodeRunnerError("model exhausted episode turns without an answer")
 
 
