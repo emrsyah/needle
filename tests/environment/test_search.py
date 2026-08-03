@@ -7,6 +7,8 @@ import pytest
 
 from needle.data import load_hotpotqa
 from needle.environment import (
+    AnswerObservation,
+    EpisodeTrajectory,
     QuestionObservation,
     SearchEnvironment,
     SearchEnvironmentError,
@@ -40,11 +42,15 @@ def test_public_api_and_constructor_validation() -> None:
     environment = SearchEnvironment(example)
 
     assert environment_module.__all__ == [
+        "AnswerObservation",
+        "EpisodeTrajectory",
         "QuestionObservation",
         "SearchEnvironment",
         "SearchEnvironmentError",
         "SearchObservation",
     ]
+    assert AnswerObservation.__module__ == "needle.environment.search"
+    assert EpisodeTrajectory.__module__ == "needle.environment.search"
     assert environment.example is example
     assert environment.history == ()
     assert environment.remaining_searches == 5

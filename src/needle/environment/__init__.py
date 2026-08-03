@@ -1,6 +1,8 @@
 """Public bounded search environment API."""
 
 from .search import (
+    AnswerObservation,
+    EpisodeTrajectory,
     QuestionObservation,
     SearchEnvironment,
     SearchEnvironmentError,
@@ -8,6 +10,8 @@ from .search import (
 )
 
 __all__ = [
+    "AnswerObservation",
+    "EpisodeTrajectory",
     "QuestionObservation",
     "SearchEnvironment",
     "SearchEnvironmentError",
