@@ -153,6 +153,8 @@ def test_prompt_is_deterministic_and_runner_completes_fake_episode() -> None:
                 assert "1: She was born in Berkeley" in prompt
             else:
                 assert "Search results so far:\n(none)" in prompt
+                assert "Ursula K. Le Guin|1; The Left Hand of Darkness|1" in prompt
+                assert "after the final closing bracket" in prompt
             prompts.append(prompt)
             return CompletionResult(
                 next(responses), "id", "mock", None, CompletionUsage(1, 1, 2), "{}"

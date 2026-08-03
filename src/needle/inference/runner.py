@@ -15,6 +15,15 @@ def build_prompt(environment: SearchEnvironment) -> str:
     lines = [
         "You are a careful evidence-seeking QA agent.",
         "Return exactly one action: SEARCH[query] or ANSWER[answer] CITATIONS[title|index; ...].",
+        (
+            "Example: ANSWER[United States] CITATIONS[Ursula K. Le Guin|1; "
+            "The Left Hand of Darkness|1]."
+        ),
+        (
+            "Use one title|index citation per entry; separate entries with semicolons, "
+            "never comma-separated indices."
+        ),
+        "Do not add a period, explanation, or any text after the final closing bracket.",
         "Use only the supplied search results for citations.",
         f"Question: {environment.example.question}",
         "Search results so far:",
