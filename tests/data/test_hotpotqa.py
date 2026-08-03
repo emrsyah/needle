@@ -35,6 +35,28 @@ def _load(path: Path):
     return load_hotpotqa(path)
 
 
+def test_data_package_exposes_only_supported_hotpotqa_api() -> None:
+    from needle.data import Document, QuestionExample, load_hotpotqa
+    from needle.data import EvidenceRef as public_evidence_ref
+    from needle.data import HotpotQAValidationError as public_validation_error
+
+    assert Document.__module__ == "needle.data.models"
+    assert public_evidence_ref.__module__ == "needle.data.models"
+    assert public_validation_error.__module__ == "needle.data.models"
+    assert QuestionExample.__module__ == "needle.data.models"
+    assert callable(load_hotpotqa)
+
+    import needle.data as data
+
+    assert data.__all__ == [
+        "Document",
+        "EvidenceRef",
+        "HotpotQAValidationError",
+        "QuestionExample",
+        "load_hotpotqa",
+    ]
+
+
 def test_loads_fixture_into_ordered_domain_examples() -> None:
     examples = _load(FIXTURE_PATH)
 
