@@ -136,6 +136,13 @@ class EpisodeRunner:
                         )
                         raise EpisodeRunnerError(f"{message}: {error}") from error
                     feedback = str(error)
+                    if isinstance(error, ActionParseError):
+                        feedback = (
+                            f"{feedback}\n"
+                            "Parser correction: emit exactly one line matching SEARCH[query] "
+                            "or ANSWER[answer] CITATIONS[title|index; ...]. Do not use "
+                            "Markdown, explanations, or a final period."
+                        )
         raise EpisodeRunnerError("model exhausted episode turns without an answer")
 
 

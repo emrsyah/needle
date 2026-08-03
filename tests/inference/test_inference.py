@@ -172,6 +172,7 @@ def test_runner_retries_parser_error_with_validator_feedback() -> None:
     responses = iter(
         (
             "ANSWER[United States] CITATIONS[Ursula K. Le Guin|1] trailing",
+            "```ANSWER[United States] CITATIONS[Ursula K. Le Guin|1]```",
             "ANSWER[United States] CITATIONS[Ursula K. Le Guin|1]",
         )
     )
@@ -183,14 +184,16 @@ def test_runner_retries_parser_error_with_validator_feedback() -> None:
                 next(responses), "id", "mock", None, CompletionUsage(1, 1, 2), "{}"
             )
 
-    trajectory = EpisodeRunner(RetryingClient(), max_retries=1).run(  # type: ignore[arg-type]
+    trajectory = EpisodeRunner(RetryingClient(), max_retries=2).run(  # type: ignore[arg-type]
         SearchEnvironment(example, top_k=1, max_searches=1)
     )
 
     assert trajectory.answer.answer == "United States"
-    assert len(prompts) == 2
+    assert len(prompts) == 3
     assert "Validator feedback: the previous action was rejected." in prompts[1]
     assert "action does not match the Needle action grammar" in prompts[1]
+    assert "Parser correction: emit exactly one line" in prompts[1]
+    assert "Parser correction: emit exactly one line" in prompts[2]
 
 
 def test_runner_retries_invalid_citation_with_validator_feedback() -> None:
