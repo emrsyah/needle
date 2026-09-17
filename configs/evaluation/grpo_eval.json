@@ -1,0 +1,21 @@
+{
+    "schema_version": 1,
+    "name": "grpo_checkpoint_evaluation",
+    "provider": "local",
+    "checkpoint_path": null,
+    "base_model": "Qwen/Qwen2.5-7B-Instruct",
+    "model_revision": null,
+    "tokenizer_revision": null,
+    "revision_status": "filled_by_training_run",
+    "prompt_serialization": "needle.inference.runner.build_prompt",
+    "generation": {
+        "do_sample": false,
+        "temperature": 0.0,
+        "top_p": 1.0,
+        "max_new_tokens": 128,
+        "seed": 7,
+        "max_retries": 0
+    },
+    "offline": {"HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1", "local_files_only": true},
+    "shared_environment": "configs/evaluation/shared_environment.json"
+}

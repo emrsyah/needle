@@ -1,0 +1,11 @@
+{
+    "schema_version": 1,
+    "dataset_manifest_path": "configs/evaluation/splits.json",
+    "dataset_manifest_sha256": null,
+    "dataset_manifest_status": "pending_first_official_source_run",
+    "prompt_builder_revision": "82f3642e9bb6dafc51a7bc570441a7d1663b1eed",
+    "seed_policy": {"base_seed": 7, "per_question": "sha256(f'{seed}:{question_id}')"},
+    "top_k": 3,
+    "max_searches": 3,
+    "max_retries": 0
+}

@@ -14,12 +14,8 @@ from typing import Any
 from needle.data import QuestionExample
 from needle.data.hotpotqa import parse_hotpotqa_example
 
-DEFAULT_TRAIN_URL = (
-    "http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_train_v1.1.json"
-)
-DEFAULT_DEV_URL = (
-    "http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json"
-)
+DEFAULT_TRAIN_URL = "http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_train_v1.1.json"
+DEFAULT_DEV_URL = "http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json"
 SPLIT_ALGORITHM = "sha256_seed_question_id_v1"
 TRAIN_FRACTION = 0.95
 
