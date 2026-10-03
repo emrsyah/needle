@@ -1,0 +1,12 @@
+[
+  {
+    "_id": "needle-train-001",
+    "question": "Which city is the capital of the country containing Mount Fuji?",
+    "answer": "Tokyo",
+    "context": [
+      ["Mount Fuji", ["Mount Fuji is in Japan."]],
+      ["Japan", ["Tokyo is the capital of Japan."]]
+    ],
+    "supporting_facts": [["Mount Fuji", 0], ["Japan", 0]]
+  }
+]

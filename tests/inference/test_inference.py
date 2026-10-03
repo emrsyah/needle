@@ -156,6 +156,8 @@ def test_prompt_is_deterministic_and_runner_completes_fake_episode() -> None:
                 assert "Ursula K. Le Guin|1; The Left Hand of Darkness|1" in prompt
                 assert "after the final closing bracket" in prompt
                 assert "Copy citation titles exactly as shown" in prompt
+                assert "SEARCH[query] is search-only" in prompt
+                assert "Remaining search budget: 2" in prompt
             prompts.append(prompt)
             return CompletionResult(
                 next(responses), "id", "mock", None, CompletionUsage(1, 1, 2), "{}"

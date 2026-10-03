@@ -1,0 +1,4 @@
+{"baseline":"scripted","question_id":"needle-001","status":"completed","searches":["author","birthplace"],"metrics":{"answer_exact_match":1.0,"answer_f1":1.0,"evidence_coverage":1.0,"citation_precision":1.0,"retrieval_recall":1.0,"search_cost":0.666667,"duplicate_query_penalty":0.0,"information_gain":[0.5,0.5],"total":5.933333},"total_tokens":20}
+{"baseline":"qwen","question_id":"needle-002","status":"failed","error":"model action failed: malformed action"}
+{"baseline":"qwen","question_id":"needle-003","status":"failed","error":"model action failed: OpenRouter transport failed: timeout"}
+{"baseline":"qwen","question_id":"needle-004","status":"completed","searches":[],"metrics":{"answer_exact_match":0.0,"answer_f1":0.0,"evidence_coverage":0.0,"citation_precision":0.0,"retrieval_recall":0.0,"search_cost":0.0,"duplicate_query_penalty":0.0,"information_gain":[],"total":0.0},"total_tokens":10}

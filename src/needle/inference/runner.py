@@ -22,6 +22,8 @@ def build_prompt(environment: SearchEnvironment, feedback: str | None = None) ->
     lines = [
         "You are a careful evidence-seeking QA agent.",
         "Return exactly one action: SEARCH[query] or ANSWER[answer] CITATIONS[title|index; ...].",
+        "SEARCH[query] is search-only: never append CITATIONS[...] to a SEARCH action.",
+        "ANSWER[...] is terminal; when the search budget reaches 0, answer immediately.",
         (
             "Example: ANSWER[United States] CITATIONS[Ursula K. Le Guin|1; "
             "The Left Hand of Darkness|1]."
@@ -38,6 +40,7 @@ def build_prompt(environment: SearchEnvironment, feedback: str | None = None) ->
         "Never invent a document title; use CITATIONS[] when no citation can be validated.",
         "Use only the supplied search results for citations.",
         f"Question: {environment.example.question}",
+        f"Remaining search budget: {environment.remaining_searches}",
         "Search results so far:",
     ]
     if not environment.history:

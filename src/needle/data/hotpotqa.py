@@ -118,14 +118,8 @@ def load_hotpotqa(path: str | Path) -> tuple[QuestionExample, ...]:
     examples: list[QuestionExample] = []
     seen_question_ids: dict[str, int] = {}
     for position, raw_example in enumerate(payload):
-        if not isinstance(raw_example, dict):
-            _error(position, "example", "must be an object")
-
-        for field in ("_id", "question", "answer", "context", "supporting_facts"):
-            if field not in raw_example:
-                _error(position, field, "is required", raw_example.get("_id"))
-
-        question_id = _non_empty_text(raw_example["_id"], position, "_id")
+        parsed = parse_hotpotqa_example(raw_example, position)
+        question_id = parsed.question_id
         if question_id in seen_question_ids:
             _error(
                 position,
@@ -134,18 +128,33 @@ def load_hotpotqa(path: str | Path) -> tuple[QuestionExample, ...]:
                 question_id,
             )
         seen_question_ids[question_id] = position
-        question = _non_empty_text(raw_example["question"], position, "question", question_id)
-        answer = _non_empty_text(raw_example["answer"], position, "answer", question_id)
-        documents = _load_documents(raw_example, position, question_id)
-        supporting_facts = _load_supporting_facts(raw_example, position, question_id, documents)
-        examples.append(
-            QuestionExample(
-                question_id=question_id,
-                question=question,
-                gold_answer=answer,
-                documents=documents,
-                supporting_facts=supporting_facts,
-            )
-        )
+        examples.append(parsed)
 
     return tuple(examples)
+
+
+def parse_hotpotqa_example(raw_example: object, position: int = 0) -> QuestionExample:
+    """Validate and convert one native HotpotQA row.
+
+    Keeping row parsing separate lets dataset-preparation tools report malformed rows
+    individually while preserving this module as the single validation boundary.
+    """
+    if not isinstance(raw_example, dict):
+        _error(position, "example", "must be an object")
+
+    for field in ("_id", "question", "answer", "context", "supporting_facts"):
+        if field not in raw_example:
+            _error(position, field, "is required", raw_example.get("_id"))
+
+    question_id = _non_empty_text(raw_example["_id"], position, "_id")
+    question = _non_empty_text(raw_example["question"], position, "question", question_id)
+    answer = _non_empty_text(raw_example["answer"], position, "answer", question_id)
+    documents = _load_documents(raw_example, position, question_id)
+    supporting_facts = _load_supporting_facts(raw_example, position, question_id, documents)
+    return QuestionExample(
+        question_id=question_id,
+        question=question,
+        gold_answer=answer,
+        documents=documents,
+        supporting_facts=supporting_facts,
+    )
