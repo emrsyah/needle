@@ -72,6 +72,10 @@ def preflight(args: argparse.Namespace) -> dict:
     )
     episode_started = time.time()
     record = collector.collect(example)
+    generation_seconds = time.time() - episode_started
+    generated = sum(len(trace.completion_token_ids) for trace in rollout_traces(record))
+    report["generation_seconds"] = round(generation_seconds, 2)
+    report["generated_tokens_per_second"] = round(generated / max(generation_seconds, 1e-9), 1)
     report["episode"] = {
         "status": record.status.value,
         "turns": len(record.steps),

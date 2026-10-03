@@ -4,7 +4,7 @@ Needle is a research project for training an evidence-seeking agentic RAG system
 
 ## Status
 
-Early research prototype. The current milestone is a deterministic HotpotQA vertical slice; model inference and reinforcement learning are not implemented yet.
+Research prototype. The deterministic HotpotQA environment, an OpenRouter baseline, a local Qwen policy, and an interactive GRPO trainer are implemented. GPU runs follow [docs/runbooks/runpod.md](docs/runbooks/runpod.md).
 
 ## Development
 
@@ -16,6 +16,12 @@ Set up the environment:
 
 ```bash
 uv sync --dev
+```
+
+For local model training/evaluation (PyTorch, Transformers, PEFT), add the training group. A plain `uv sync --dev` removes it again:
+
+```bash
+uv sync --dev --group training
 ```
 
 Run the quality gates:

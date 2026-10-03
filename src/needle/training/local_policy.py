@@ -117,10 +117,15 @@ class LocalPolicy:
                 "max_new_tokens": self.generation.max_new_tokens,
                 "do_sample": self.generation.do_sample,
                 "attention_mask": torch.ones_like(input_ids),
+                # Override the checkpoint's generation_config (Qwen ships top_k=20 and
+                # repetition_penalty>1) so samples come from the same softmax that
+                # old_log_probs scores, and greedy decoding is a pure argmax.
+                "repetition_penalty": 1.0,
             }
             if self.generation.do_sample:
                 kwargs["temperature"] = self.generation.temperature
                 kwargs["top_p"] = self.generation.top_p
+                kwargs["top_k"] = 0
             else:
                 kwargs["temperature"] = None
                 kwargs["top_p"] = None
@@ -156,7 +161,14 @@ class LocalPolicy:
         metadata = ModelMetadata(
             model=self.model_name,
             provider="local",
-            extras=(("seed", self.seed), ("do_sample", self.generation.do_sample)),
+            extras=(
+                ("seed", self.seed),
+                ("do_sample", self.generation.do_sample),
+                ("temperature", self.generation.temperature if self.generation.do_sample else 0.0),
+                ("top_p", self.generation.top_p if self.generation.do_sample else 1.0),
+                ("top_k", 0),
+                ("repetition_penalty", 1.0),
+            ),
         )
         return PolicyResponse(action_text=action_text, model_metadata=metadata, tokens=tokens)
 
