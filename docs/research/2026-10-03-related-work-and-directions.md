@@ -41,6 +41,33 @@ Run the planned GRPO smoke test unchanged. Then frame the paper around **#1 (tur
 
 Follow-ups: read CaRR [2] and STAMP [4] in full to sharpen the novelty claim; prototype the reward-gating change.
 
+## Full-text review: CaRR and STAMP (2026-10-03)
+
+### CaRR / C-GRPO [2] (Tsinghua/Zhipu, Jan 2026)
+- LLM decomposes each synthetic multi-hop question into single-hop rubrics with hidden entities. A judge LLM checks: entity named in answer → rubric supported by cited content → rubric connected to the answer entity (BFS). Rubric reward = fraction satisfied.
+- C-GRPO: `R = (1-α)·R_outcome + α·R_outcome·R̂_rubric` — rubric reward **only counts when the answer is correct** (outcome-gated). Format/overlength errors get 0.
+- Qwen3-4B and 30B-A3B, live web (Serper/Jina), DeepDive data, BrowseComp-style benchmarks. Trajectory-level only; no per-step credit.
+- **Key finding for Needle:** under outcome-only GRPO, average tool calls keep *decreasing* during training and the agent learns shortcut answers from the last few hops. C-GRPO keeps tool calls higher. **Fewer searches is not automatically good.**
+
+### STAMP [4] (Baidu/PKU, Jul 2026)
+- Reference-based LLM verifier checks cited documents against a training-time evidence graph (entities + relations). Each supporting document is credited to the **step that first exposed it** (first-exposure attribution). Per-step credit capped at C<1.
+- Credit enters via **sign-preserving advantage modulation**: `A_step = A·(1 + sign(A)·credit_t)`. Positive trajectories amplify evidence steps; negative trajectories attenuate penalties on evidence steps. Reward and group ranking unchanged.
+- +2.0/+5.5/+3.0 on BrowseComp/-ZH/xbench over GRPO; composes with C-GRPO. Ablations: first-exposure > all-step, capped > uncapped, both signs > positive only. String matching verifier much worse than the LLM judge.
+- Explicitly leaves "information-gain estimation" attribution to future work. No efficiency objective. Only one model scale (30B-A3B), needs SFT cold start, live web.
+
+### Impact on Needle's thesis
+- **Direction #1 (turn-level evidence credit) is essentially STAMP.** Needle cannot claim it as a novel method. It can still be used as a component/baseline, implemented as STAMP's modulation with exact gold-paragraph attribution.
+- **Direction #3 gating is partly CaRR's outcome-gating idea** applied to penalties instead of bonuses.
+- **What remains open:**
+  1. Neither paper studies the **efficiency ↔ grounding trade-off**. CaRR shows that outcome RL already shrinks search and produces shortcuts; adding a search-cost penalty (Needle's design) likely makes this worse. Needle can measure this exactly, because HotpotQA gold supporting facts make shortcut detection deterministic (no LLM judge).
+  2. **Noise-free attribution**: STAMP's credit depends on an LLM verifier (string matching collapses gains). Needle has exact gold-paragraph labels, so it can isolate "does step credit help when attribution is perfect?" and test sensitivity to injected attribution noise. That is a clean, cheap controlled study.
+  3. **Small-model, no-SFT, low-budget regime** (7B LoRA, ~$30), where neither paper reports results.
+
+### Revised thesis (proposed)
+> Efficiency penalties in search-agent RL trade grounding for cost: they accelerate the shortcut collapse that outcome-only GRPO already exhibits. With exact evidence attribution, provenance-style step credit (STAMP) recovers grounding while keeping the efficiency gains. Needle measures this trade-off precisely on HotpotQA, where shortcuts and evidence are detected deterministically.
+
+Main comparison becomes: outcome-only, + search penalty (ungated), + gated penalty, + STAMP-style credit with gold attribution, with attribution-noise sweep as the analysis section.
+
 ## References
 
 1. Jin et al., 2025. *Search-R1: Training LLMs to Reason and Leverage Search Engines with Reinforcement Learning.* https://consensus.app/papers/details/58192257da745001bdf401595ac7eaf2/
