@@ -24,7 +24,9 @@ enforce_offline()
 
 import torch  # noqa: E402
 
-from needle.data.hotpotqa import load_hotpotqa  # noqa: E402
+from needle.data import QuestionExample  # noqa: E402
+from needle.data.hotpotqa import parse_hotpotqa_example  # noqa: E402
+from needle.data.models import HotpotQAValidationError  # noqa: E402
 from needle.training import RolloutCollector  # noqa: E402
 from needle.training.grpo import rollout_mean_log_prob, rollout_traces  # noqa: E402
 from needle.training.local_policy import (  # noqa: E402
@@ -34,6 +36,16 @@ from needle.training.local_policy import (  # noqa: E402
 )
 
 DEFAULT_FIXTURE = Path("tests/fixtures/tiny_hotpotqa.json")
+
+
+def first_valid_example(source: Path) -> QuestionExample:
+    """First row that passes validation; real HotpotQA files contain malformed rows."""
+    for position, raw in enumerate(json.loads(source.read_text(encoding="utf-8"))):
+        try:
+            return parse_hotpotqa_example(raw, position)
+        except HotpotQAValidationError:
+            continue
+    raise SystemExit(f"no valid example in {source}")
 
 
 def preflight(args: argparse.Namespace) -> dict:
@@ -61,7 +73,7 @@ def preflight(args: argparse.Namespace) -> dict:
     report["load_seconds"] = round(time.time() - started, 1)
     optimizer = torch.optim.AdamW(trainable, lr=config["learning_rate"])
 
-    example = load_hotpotqa(args.source)[0]
+    example = first_valid_example(args.source)
     generation = GenerationConfig(**config["generation"])
     policy = LocalPolicy(model, tokenizer, generation=generation, model_name=str(model_path))
     policy.reseed(config["seed"])
