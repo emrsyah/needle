@@ -109,7 +109,7 @@ def evaluate(args: argparse.Namespace) -> None:
     from needle.training.runtime import load_model_and_tokenizer
 
     model_path = validate_local_model_path(args.model_path)
-    ids = load_split_ids(args.ids, "holdout_v1")
+    ids = load_split_ids(args.ids, args.split)
     if args.limit:
         ids = ids[: args.limit]
     examples = load_examples(args.source, ids)
@@ -165,6 +165,11 @@ def main() -> None:
     parser.add_argument("--ids", type=Path, default=Path("configs/evaluation/holdout_v1_ids.json"))
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--name", default="local")
+    parser.add_argument(
+        "--split",
+        default="holdout_v1",
+        help="split name inside --ids; use 'validation' with splits.json and the train source",
+    )
     parser.add_argument("--limit", type=int)
     parser.add_argument("--top-k", type=int, default=3)
     parser.add_argument("--max-searches", type=int, default=3)

@@ -27,6 +27,8 @@ class RewardConfig:
     retrieval_recall_weight: float = 1.0
     search_cost_weight: float = 0.1
     duplicate_query_penalty_weight: float = 0.1
+    gate_penalties_on_correct: bool = False
+    """When true, search and duplicate penalties apply only to exactly-correct answers."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -176,15 +178,20 @@ def evaluate(
         duplicate_query_penalty=duplicate_query_penalty(trajectory),
         information_gain=information_gain(example, trajectory),
     )
-    total = (
+    quality = (
         metrics["answer_exact_match"] * config.answer_exact_match_weight
         + metrics["answer_f1"] * config.answer_f1_weight
         + metrics["evidence_coverage"] * config.evidence_coverage_weight
         + metrics["citation_precision"] * config.citation_precision_weight
         + metrics["retrieval_recall"] * config.retrieval_recall_weight
-        - metrics["search_cost"] * config.search_cost_weight
-        - metrics["duplicate_query_penalty"] * config.duplicate_query_penalty_weight
     )
+    penalties = (
+        metrics["search_cost"] * config.search_cost_weight
+        + metrics["duplicate_query_penalty"] * config.duplicate_query_penalty_weight
+    )
+    if config.gate_penalties_on_correct:
+        penalties *= metrics["answer_exact_match"]
+    total = quality - penalties
     return RewardBreakdown(**metrics, total=total)
 
 

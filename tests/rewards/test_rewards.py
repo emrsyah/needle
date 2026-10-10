@@ -133,6 +133,26 @@ def test_reward_records_are_immutable() -> None:
         RewardConfig().search_cost_weight = 0.0  # type: ignore[misc]
 
 
+def test_gated_penalties_apply_only_to_correct_answers() -> None:
+    gated = RewardConfig(gate_penalties_on_correct=True)
+    queries = (" Ursula ", "ursula")
+    correct_example, correct = make_episode(queries=queries)
+    wrong_example, wrong = make_episode(answer="Canada", queries=queries)
+
+    assert evaluate(correct_example, correct, gated).total == pytest.approx(
+        evaluate(correct_example, correct).total
+    )
+    wrong_breakdown = evaluate(wrong_example, wrong, gated)
+    assert wrong_breakdown.answer_exact_match == 0.0
+    assert wrong_breakdown.total == pytest.approx(
+        wrong_breakdown.answer_f1
+        + wrong_breakdown.evidence_coverage
+        + wrong_breakdown.citation_precision
+        + wrong_breakdown.retrieval_recall
+    )
+    assert evaluate(wrong_example, wrong).total < wrong_breakdown.total
+
+
 def test_custom_weights_do_not_include_information_gain() -> None:
     example, trajectory = make_episode(
         citations=(EvidenceRef("Ursula K. Le Guin", 1),), queries=("Ursula",)

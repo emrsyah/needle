@@ -21,6 +21,30 @@ Differentiation target: CaRR/C‑GRPO (citation rubrics, trajectory-level) and S
 
 If the budget runs out before Phase 5, the minimum publishable result is Phase 4 (main comparison) on HotpotQA with one seed plus a clear limitations section.
 
+## Update 2026-10-10 — $30 plan (supersedes Phase 4 scope and the compute table below)
+
+Status: Phases 1–3 done (see `logs/2026-10-10-runpod-grpo-smoke.md`). Thesis scope is a bachelor degree; novelty is not a goal, so **R3 (turn-level credit) is dropped** and cited as future work (STAMP already does it).
+
+Costs at Secure Cloud L40S $1.09/h: one training run (256 questions, G=8) + holdout eval ≈ $2.60; one 300-question eval ≈ $0.35–0.40.
+
+| # | Experiment | Purpose | Cost |
+|---|---|---|---|
+| 0 | Run 2: 256 questions, G=8, lr 2e-5, full reward (`grpo_run2.json`) | Choose final training settings | ~$2.60 |
+| 1 | Prompt fix (exact retrieved titles in prompt) + new B0 — only if run 2 is flat | Attack invented-citation failures | ~$0.50 |
+| 2 | **R0** outcome-only reward (EM only, no penalties) | Search-R1-style baseline | ~$2.60 |
+| 3 | **R1** full reward (current `RewardConfig`) | Main method | ~$2.60 |
+| 4 | **R2** full reward + `gate_penalties_on_correct` | Gated efficiency penalty | ~$2.60 |
+| 5 | Second seed of R0, R1, R2 | Mean ± range instead of a single run | ~$7.80 |
+| 6 | Optional: R1 on 2WikiMultiHopQA (eval only) | Generalization | ~$1 |
+| — | Idle, failures, buffer | | ~$3–4 |
+
+Total ≈ $21–23 of ~$26 remaining after run 2.
+
+Rules:
+- **Settings are chosen on the `validation` split** (`evaluate_checkpoint.py --ids configs/evaluation/splits.json --split validation --source <train json> --limit 300`), never on the holdout. Holdout numbers are reported, not tuned on.
+- Queue runs back-to-back in one tmux chain; stop the pod between sessions; terminate it after the last run.
+- Every run gets a `logs/` entry and a `results/<date>-<topic>/` folder.
+
 ---
 
 ## Phase 0 — Close out current state (local, ~0.5 day)
