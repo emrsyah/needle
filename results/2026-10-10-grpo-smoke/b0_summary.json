@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "python": "3.11.10",
+    "platform": "Linux-6.17.0-29-generic-x86_64-with-glibc2.35",
+    "torch": "2.14.1+cu130",
+    "transformers": "4.57.6",
+    "peft": "0.21.2",
+    "cuda": "13.0",
+    "gpu": "NVIDIA L40S",
+    "model_path": "/workspace/hf/hub/models--Qwen--Qwen2.5-7B-Instruct/snapshots/a09a35458c702b33eeacc393d103063234e8bc28",
+    "model_revision": "a09a35458c702b33eeacc393d103063234e8bc28",
+    "offline": {
+      "HF_HUB_OFFLINE": "1",
+      "TRANSFORMERS_OFFLINE": "1"
+    },
+    "adapter_path": null,
+    "ids_manifest": "configs/evaluation/holdout_v1_ids.json",
+    "source": "/workspace/data/hotpot_dev_distractor_v1.json",
+    "top_k": 3,
+    "max_searches": 3,
+    "max_new_tokens": 128,
+    "do_sample": false,
+    "max_retries": 0
+  },
+  "summary": {
+    "b0_local_base": {
+      "n": 300,
+      "completed": 170,
+      "failed": 130,
+      "answer_exact_match_all_rows_fail_as_zero": 0.2233,
+      "answer_exact_match_completed_only": 0.3941,
+      "answer_f1_completed_only": 0.5013,
+      "evidence_coverage_completed_only": 0.4723,
+      "citation_precision_completed_only": 0.6328,
+      "retrieval_recall_completed_only": 0.8292,
+      "total_completed_only": 2.7569,
+      "mean_searches_completed_only": 1.9176
+    }
+  }
+}

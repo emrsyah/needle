@@ -1,0 +1,51 @@
+{
+  "gates": {
+    "token_trace_captured": true,
+    "old_logp_reproducible": true,
+    "backward_and_step": true,
+    "within_time_limit": true,
+    "peak_memory_below_90pct": true
+  },
+  "trainable_parameters": 40370176,
+  "total_parameters": 7655986688,
+  "load_seconds": 79.7,
+  "generation_seconds": 7.31,
+  "generated_tokens_per_second": 1.9,
+  "episode": {
+    "status": "invalid",
+    "turns": 1,
+    "actions": [
+      "SEARCH[Scott Derrickson nationality] SEARCH[Ed Wood nationality]"
+    ],
+    "failure": "action does not match the Needle action grammar",
+    "reward": -1.0,
+    "completion_tokens": [
+      14
+    ],
+    "prompt_tokens": [
+      237
+    ]
+  },
+  "old_new_logp_drift": 0.002170473860900801,
+  "episode_and_update_seconds": 8.2,
+  "gpu": "NVIDIA L40S",
+  "vram_total_gib": 44.39,
+  "peak_allocated_gib": 15.06,
+  "peak_reserved_gib": 15.08,
+  "metadata": {
+    "python": "3.11.10",
+    "platform": "Linux-6.17.0-29-generic-x86_64-with-glibc2.35",
+    "torch": "2.14.1+cu130",
+    "transformers": "4.57.6",
+    "peft": "0.21.2",
+    "cuda": "13.0",
+    "gpu": "NVIDIA L40S",
+    "model_path": "/workspace/hf/hub/models--Qwen--Qwen2.5-7B-Instruct/snapshots/a09a35458c702b33eeacc393d103063234e8bc28",
+    "model_revision": "a09a35458c702b33eeacc393d103063234e8bc28",
+    "offline": {
+      "HF_HUB_OFFLINE": "1",
+      "TRANSFORMERS_OFFLINE": "1"
+    }
+  },
+  "passed": true
+}
