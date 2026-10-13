@@ -1,13 +1,5 @@
 \telubab{3}{BAB III}{METHODOLOGY}{sec:3}
 
-\begin{quote}
-\textbf{DRAFT --- not submission-ready.} Citation venues were checked on
-2026-10-11 (reference table in Chapter~\ref{sec:2}). Every number and
-code detail in this chapter is traced to the writer brief,
-\texttt{configs/\allowbreak{}}, \texttt{logs/\allowbreak{}}, or source
-code (see the provenance table at the end).
-\end{quote}
-
 This chapter describes how the search agent is built, trained, and
 evaluated. Section~\ref{sec:3.1} gives an overview of the research
 design. Sections 3.2--3.6 describe the data, the search environment, the
@@ -18,11 +10,29 @@ reports the implementation and compute details.
 
 \subsection{Research design overview}\label{sec:3.1}
 
-The study is a controlled experiment. Only the reward function (and, in
-two variants, the optimizer) changes between runs. The model, data,
-environment, hyperparameters, and evaluation protocol stay fixed. This
-lets differences in behaviour be attributed to the reward rather than to
-other changes.
+The study is a controlled experiment. The model, data, environment,
+hyperparameters, and evaluation protocol stay fixed; only the reward
+function (and, in two variants, the optimizer) changes between runs. Two
+limits on this control should be stated up front:
+
+\begin{itemize}
+\tightlist
+\item
+  The main comparison, R1 (VEGR) against R0 (outcome-only), changes
+  \textbf{the whole reward bundle at once}: six terms are added (F1,
+  coverage, precision, retrieval recall, search cost, duplicate
+  penalty). The design cannot say which of these terms is responsible
+  for a difference.
+\item
+  A denser reward also changes how many training steps produce an
+  update. R0 skips about half its steps as zero-variance groups
+  (Section~\ref{sec:3.6}), so R0 runs make about 130 updates while R1
+  runs make about 240 (Table~\ref{tbl:4.1}).
+\end{itemize}
+
+Differences between R1 and R0 are therefore attributed to the full VEGR
+bundle, together with the training signal it produces, and not to any
+single term.
 
 Each training episode follows the same loop (Figure~\ref{fig:3.1}):
 
@@ -139,10 +149,16 @@ The environment (\texttt{SearchEnvironment},
 \texttt{src/\allowbreak{}needle/\allowbreak{}environment/\allowbreak{}search.\allowbreak{}py})
 is a bounded, resettable search session over a single question.
 
-\textbf{Corpus and retriever.} The searchable corpus is the question's
-own 10 paragraphs. Retrieval uses Okapi BM25 (Robertson \& Zaragoza,
-2009), via the \texttt{rank\_\allowbreak{}bm25} implementation with its
-default parameters. Each paragraph is indexed as its title plus all its
+\textbf{Corpus and retriever.} The searchable corpus is a \textbf{closed
+pool of the question's own 10 paragraphs}, which always contains both
+gold paragraphs. This makes retrieval much easier than open-domain
+search: the un-tuned model already retrieves 83\% of the gold documents
+(retrieval recall 0.829, Table~\ref{tbl:4.1}). The task is therefore
+closer to reading comprehension with a paging tool than to web search,
+and ``search agent'' in this thesis always means search over this closed
+pool. Retrieval uses Okapi BM25 (Robertson \& Zaragoza, 2009), via the
+\texttt{rank\_\allowbreak{}bm25} implementation with its default
+parameters. Each paragraph is indexed as its title plus all its
 sentences, tokenized into case-folded Unicode word tokens. A search
 returns the \textbf{top 3} documents. Ties are broken by original
 document order, so retrieval is deterministic. Each returned document is
@@ -345,6 +361,44 @@ time:
   citation pattern described in Chapter~\ref{sec:4}.
 \end{itemize}
 
+\textbf{What R0 rewards about citations.} Under R0, a valid episode
+earns its EM (0 or 1), with or without citations. A citation can never
+add reward, but a citation to a title or sentence that was not retrieved
+makes the episode an evidence failure, which scores −1. So \textbf{R0
+punishes bad citations but never rewards good ones}. Whether citing pays
+off then depends only on how often the policy's citation attempts are
+invalid.
+
+Early in training this rate is high. In the first 32 steps of R0 seed 8
+(8 × 32 = 256 training rollouts; Section~\ref{sec:4.5}):
+
+\begin{itemize}
+\tightlist
+\item
+  176 rollouts tried to cite. 90 of them were evidence failures (−1),
+  and the 86 valid ones earned 0.50 on average.
+\item
+  The 42 valid uncited rollouts earned 0.36 on average.
+\end{itemize}
+
+A valid cited answer actually scored \emph{higher} than an uncited one,
+because cited answers were more often correct. But about half of the
+attempts to cite failed, so the average reward of \emph{trying} to cite
+was about (86 × 0.50 − 90) / 176 ≈ \textbf{−0.27}, against
+\textbf{+0.36} for not citing. Under these conditions the policy
+gradient pushes the policy toward omitting citations. The −1 validity
+penalty, combined with no reward for citing correctly, is what drives
+this. It is not an exotic loophole that the policy ``discovered''; it
+follows from the reward definition and the base model's high rate of
+invalid citations (85 of B0's 130 holdout failures are evidence
+failures; Section~\ref{sec:4.2}).
+
+VEGR changes this trade. Its coverage and precision terms reward correct
+citations directly. In R1 seed 8, a valid cited rollout earned about 3.4
+on average and a valid uncited one about 1.3, a gap of about 2 reward
+points, against 0.14 under R0. Section~\ref{sec:4.5} gives the evidence
+for both runs.
+
 \subsection{Policy model}\label{sec:3.5}
 
 \textbf{Base model.} The policy is \textbf{Qwen2.5-7B-Instruct} (Qwen
@@ -386,8 +440,10 @@ which makes training on a single 48 GB GPU possible.
 
 \subsection{Training algorithm}\label{sec:3.6}
 
-Training uses \textbf{Group Relative Policy Optimization} (GRPO; Shao et
-al., 2024), extended to multi-turn episodes. The implementation is in
+Training uses a \textbf{GRPO-style group-normalised policy gradient},
+following Group Relative Policy Optimization (GRPO; Shao et al., 2024)
+and extended to multi-turn episodes. It differs from full GRPO in the
+ways stated under ``Objective'' below. The implementation is in
 \texttt{scripts/\allowbreak{}train\_\allowbreak{}grpo.\allowbreak{}py}
 and
 \texttt{src/\allowbreak{}needle/\allowbreak{}training/\allowbreak{}grpo.\allowbreak{}py}.
@@ -424,6 +480,34 @@ There is \textbf{no KL penalty} to a reference model. Invalid rollouts
 stay in the batch, so the −1 penalty actively pushes the policy away
 from malformed actions.
 
+\textbf{How the objective behaves in practice.} Three properties of the
+implementation mean that it is not the full PPO-style GRPO objective:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{One update per group.} Each question's 8 rollouts are used for
+  exactly one optimizer step. There are no repeated epochs and no
+  minibatch reuse, so the old and new policies are the same at update
+  time, ρ ≈ 1, and the clipping never activates. The logged clip
+  fraction is \textbf{0 in all 16 runs}, and the largest old/new
+  log-probability difference per run is 0.03--0.09, which is bf16
+  numerical noise. In effect the update is a REINFORCE-style policy
+  gradient with a group-mean baseline and group-normalised advantages.
+\item
+  \textbf{No KL term.} DAPO (Yu et al., 2025) and Dr.~GRPO (Liu et al.,
+  2025) also drop the KL penalty.
+\item
+  \textbf{Sequence-level ratio.} The ratio uses each episode's
+  \emph{mean} token log-probability, so it is computed per sequence
+  rather than per token. This scales each rollout's gradient by one over
+  its length, the length normalisation that Dr.~GRPO identifies as a
+  source of bias (Liu et al., 2025).
+\end{itemize}
+
+The ε = 0.2 clipping is kept in the code and in the description above
+for completeness, but it played no role in the reported runs.
+
 \textbf{Optimization.} AdamW with learning rate 2 × 10⁻⁵, gradient-norm
 clipping at 1.0, bf16, and gradient checkpointing. A run makes one pass
 over its 256 questions (256 steps, one question per step).
@@ -439,16 +523,22 @@ of the reward:
 \begin{itemize}
 \tightlist
 \item
-  \textbf{Dr.~GRPO advantages} (Liu et al., 2025), used in R4. The
-  advantage is computed without dividing by the standard deviation, A\_i
-  = r\_i − mean(r). This removes the scaling that amplifies groups whose
-  rewards are nearly equal.
+  \textbf{GRPO without std normalisation}, used in R4. The advantage is
+  computed without dividing by the standard deviation, A\_i = r\_i −
+  mean(r), which is one of the two changes proposed in Dr.~GRPO (Liu et
+  al., 2025). R4 is \textbf{not full Dr.~GRPO}: it keeps the
+  per-sequence length normalisation described above. Because the
+  learning rate stays at 2 × 10⁻⁵ while the advantages change from unit
+  scale to raw reward differences (rewards range from −1 to about 5),
+  the effective step size also changes.
 \item
   \textbf{DAPO-style dynamic sampling} (Yu et al., 2025), used in
   R0-dyn. Zero-variance groups do not count toward the step budget. The
   trainer keeps drawing questions, from a pool of up to 512, until it
-  has made 256 actual optimizer updates. This tests whether R0's
-  shortcut comes from having too few informative updates.
+  has made 256 actual optimizer updates or the pool runs out. This tests
+  whether R0's shortcut comes from having too few informative updates.
+  Only DAPO's dynamic sampling is implemented, not its other components
+  (clip-higher, token-level loss).
 \end{itemize}
 
 \textbf{Pseudocode.}
@@ -459,7 +549,7 @@ for step, question in enumerate(sample(train_split, 256, seed)):
     rewards  = [reward_fn(ep, gold(question)) for ep in episodes]  # VEGR or variant; invalid → −1
     if all rewards equal:
         log_skip(step); continue                                    # zero-variance group
-    A = (rewards − mean(rewards)) / (std(rewards) + 1e-6)          # Dr. GRPO: no division
+    A = (rewards − mean(rewards)) / (std(rewards) + 1e-6)          # R4: no division
     for each episode i:
         ρ = exp(mean_token_logp_θ(actions_i) − mean_token_logp_old(actions_i))  # mean over all action tokens
         loss += −min(ρ·A_i, clip(ρ, 0.8, 1.2)·A_i)
@@ -488,11 +578,33 @@ retries}. If an action is malformed, the episode fails.
   averaged over completed episodes only, using the definitions in
   Section~\ref{sec:3.4}.
 \item
-  \textbf{Grounded EM} counts an episode only if EM = 1, it has at least
-  one citation, and every citation is a gold supporting fact. This is a
-  strict metric: a correct answer with one non-gold citation does not
-  count. It is the measure most directly tied to the thesis claim that
-  answers should be correct \emph{and} supported by evidence.
+  \textbf{EM on completed episodes} is EM averaged over valid episodes
+  only. It separates answer quality from protocol compliance.
+\item
+  \textbf{Precision-grounded EM} counts an episode only if EM = 1, it
+  has at least one citation, and every citation is a gold supporting
+  fact (precision 1). It is strict about \emph{wrong} citations but
+  lenient about \emph{missing} ones: a correct answer citing one of two
+  gold sentences counts as fully grounded. It is reported together with
+  three stricter or standard measures:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \textbf{Lenient grounded EM:} EM = 1 and at least one gold citation.
+  \item
+    \textbf{Sup-EM:} the cited set equals the gold set (precision 1 and
+    coverage 1), as in HotpotQA's supporting-fact evaluation (Yang et
+    al., 2018).
+  \item
+    \textbf{Joint-EM and Joint-F1:} HotpotQA's joint metrics. Joint-EM
+    requires both EM and Sup-EM. Joint-F1 combines answer F1 with
+    citation precision and coverage (P = F1 × precision, R = F1 ×
+    coverage).
+  \end{itemize}
+\item
+  \textbf{Citation rate} is the share of completed episodes with at
+  least one citation.
 \item
   \textbf{Behavioural diagnostics} come from the episode and training
   logs. They include the share of episodes that repeat a query, the
@@ -507,25 +619,34 @@ al.~(2018), single runs are not treated as conclusive.
 \begin{itemize}
 \tightlist
 \item
-  Differences in EM and grounded EM are tested with a \textbf{paired
-  bootstrap} over the 300 holdout questions: 10,000 resamples (RNG seed
-  0) and a 95\% percentile confidence interval. A difference is called
-  significant only if the CI excludes 0.
+  \textbf{Primary interval: seed-aware (hierarchical) paired bootstrap.}
+  Each of 10,000 resamples draws 3 seeds with replacement for each
+  method, and 300 holdout questions with replacement, shared across the
+  methods being compared. The 95\% percentile interval therefore
+  includes variation from both the choice of seeds and the choice of
+  questions. A difference is called significant only if this interval
+  excludes 0.
 \item
-  To compare two \textbf{methods}, each question's score is first
-  averaged over the method's three seeds, and the per-question
-  difference of these averages is bootstrapped. This interval reflects
-  uncertainty from the choice of questions, not from the choice of
-  seeds, so the seed standard deviation is reported next to it. A single
-  run is compared with another single run (for example R0-dyn s8 against
-  R0 s8) in the same way, without averaging.
+  \textbf{Secondary interval: question-only paired bootstrap.} Each
+  question's score is averaged over the method's three seeds, and only
+  questions are resampled (10,000 resamples, RNG seed 0). This interval
+  ignores seed variance and is narrower; it is reported for reference
+  only. A single run compared with another single run (R0-dyn s8 against
+  R0 s8) can only be tested this way.
 \item
-  Each reward variant is trained with \textbf{3 seeds} (7, 8, 9).
-  Results are reported per seed and as the mean across seeds.
+  Each method is trained with \textbf{3 seeds} (7, 8, 9). Results are
+  reported per seed and as the mean ± standard deviation across seeds.
+  Rates over seeds, such as how many R0 seeds dropped citations, are
+  given with a Clopper--Pearson 95\% interval.
 \item
-  Since seeds of the same method can differ by several EM points, a
-  method difference is only claimed when it holds across seeds, not when
-  it shows up for a single seed.
+  \textbf{Primary and exploratory comparisons.} The primary comparisons
+  are RQ1 (each method against B0) and R1 − R0. All other comparisons
+  (R2, R3, R4 against R1, and R0-dyn against R0 s8) are
+  \textbf{exploratory}: they are not corrected for multiple comparisons,
+  and R3, R4 and R0-dyn were designed after holdout results had been
+  seen (Section~\ref{sec:3.8}). With three seeds, a non-significant
+  exploratory result is reported as \textbf{inconclusive}, not as
+  evidence of no effect.
 \end{itemize}
 
 \subsection{Experiment matrix}\label{sec:3.8}
@@ -558,7 +679,8 @@ R0 & Outcome-only & EM, invalid −1 & GRPO & 7, 8, 9 \\
 R1 & \textbf{VEGR} & full VEGR & GRPO & 7, 8, 9 \\
 R2 & Gated & VEGR, penalties only when EM = 1 & GRPO & 7, 8, 9 \\
 R3 & Coverage ×2 & VEGR, coverage weight 2 & GRPO & 7, 8, 9 \\
-R4 & VEGR + Dr.~GRPO & full VEGR & GRPO, no std division & 7, 8, 9 \\
+R4 & GRPO without std normalisation & full VEGR & GRPO, no std division
+(length normalisation kept) & 7, 8, 9 \\
 R0-dyn & Outcome-only + dynamic sampling & EM, invalid −1 & GRPO + DAPO
 dynamic sampling & 8 \\
 \end{longtable}
@@ -569,23 +691,25 @@ The comparisons map onto the research questions:
 \begin{itemize}
 \tightlist
 \item
-  \textbf{RQ1:} every trained run against B0.
+  \textbf{RQ1 (primary):} every trained method against B0.
 \item
-  \textbf{RQ2:} R1 against R0. Same optimizer, same seeds, different
-  reward.
+  \textbf{RQ2 (primary):} R1 against R0. Same optimizer and seeds,
+  different reward bundle (Section~\ref{sec:3.1}).
 \item
-  \textbf{RQ3:}
+  \textbf{RQ3 (exploratory):}
 
   \begin{itemize}
   \tightlist
   \item
-    R2 and R3 against R1 test reward design.
+    R2 and R3 against R1 probe reward design.
   \item
-    R4 against R1, and R0-dyn against R0, test optimizer fixes.
+    R4 against R1, and R0-dyn against R0 s8, probe optimizer changes.
   \item
-    R0-dyn is the key control. If dynamic sampling alone removes R0's
-    shortcut, the problem was the optimizer and not the reward. If it
-    does not, the evidence reward is necessary.
+    R0-dyn is a diagnostic control. If dynamic sampling removed R0's
+    shortcut on the seed where it occurred, the optimizer would be
+    implicated. If it did not, the reward is implicated, though one seed
+    cannot settle this, and R0-dyn also sees up to twice as many
+    questions as R0.
   \end{itemize}
 \end{itemize}
 
@@ -721,53 +845,16 @@ CPU-only restart to download results.
 \item
   The step-by-step procedure for reproducing the runs on RunPod is in
   \texttt{docs/\allowbreak{}runbooks/\allowbreak{}runpod.\allowbreak{}md}.
+\item
+  \textbf{LoRA adapters.} The adapters of 15 of the 16 trained runs are
+  kept in
+  \texttt{checkpoints/\allowbreak{}2026-\allowbreak{}10-\allowbreak{}11-\allowbreak{}fixes/\allowbreak{}}.
+  This folder is stored locally and is not in the git repository because
+  of its size (about 470 MB per adapter). The R1 seed-7 adapter was not
+  kept and is lost; its holdout episodes and training log remain.
+\item
+  \textbf{Limits.} \texttt{run\_\allowbreak{}metadata.\allowbreak{}json}
+  records library versions but not the git commit, so the code version
+  of each run is known only from the batch logs. Re-running the
+  experiments requires a rented GPU (Section~\ref{sec:3.9}).
 \end{itemize}
-
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
-
-\subsection{Provenance (remove before
-submission)}\label{provenance-remove-before-submission}
-
-{\def\LTcaptype{none} % do not increment counter
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Claim in this chapter
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Source
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-Split algorithm, 0.95 fraction, 85,573 / 4,452 counts, holdout = first
-300 valid dev rows &
-\texttt{configs/\allowbreak{}evaluation/\allowbreak{}splits.\allowbreak{}json},
-\texttt{scripts/\allowbreak{}prepare\_\allowbreak{}splits.\allowbreak{}py} \\
-BM25 (\texttt{rank\_\allowbreak{}bm25.\allowbreak{}BM25Okapi},
-defaults), tokenizer, tie-breaking &
-\texttt{src/\allowbreak{}needle/\allowbreak{}retrieval/\allowbreak{}bm25.\allowbreak{}py} \\
-Top-k 3, budget 3, failure types, no-citation loophole & writer brief
-§3;
-\texttt{src/\allowbreak{}needle/\allowbreak{}environment/\allowbreak{}search.\allowbreak{}py} \\
-Prompt content, chat template &
-\texttt{src/\allowbreak{}needle/\allowbreak{}inference/\allowbreak{}runner.\allowbreak{}py::build\_\allowbreak{}prompt};
-\texttt{src/\allowbreak{}needle/\allowbreak{}training/\allowbreak{}local\_\allowbreak{}policy.\allowbreak{}py} \\
-Reward formula and weights &
-\texttt{src/\allowbreak{}needle/\allowbreak{}rewards/\allowbreak{}\_\allowbreak{}\_\allowbreak{}init\_\allowbreak{}\_\allowbreak{}.\allowbreak{}py};
-writer brief §3 \\
-GRPO settings, per-rollout sequence-mean ratio, clipping &
-\texttt{src/\allowbreak{}needle/\allowbreak{}training/\allowbreak{}grpo.\allowbreak{}py},
-\texttt{scripts/\allowbreak{}train\_\allowbreak{}grpo.\allowbreak{}py} \\
-Dynamic sampling (512 pool, 256 updates) &
-\texttt{logs/\allowbreak{}2026-\allowbreak{}10-\allowbreak{}11-\allowbreak{}fixes-\allowbreak{}batch.\allowbreak{}md} \\
-Library versions, torch change and reason &
-\texttt{results/\allowbreak{}*/\allowbreak{}run\_\allowbreak{}metadata.\allowbreak{}json};
-\texttt{logs/\allowbreak{}2026-\allowbreak{}10-\allowbreak{}10-\allowbreak{}r0-\allowbreak{}r1-\allowbreak{}r2-\allowbreak{}batch.\allowbreak{}md} \\
-Cost per run, budget & writer brief §3;
-\texttt{logs/\allowbreak{}2026-\allowbreak{}10-\allowbreak{}11-\allowbreak{}fixes-\allowbreak{}batch.\allowbreak{}md} \\
-\texttt{uv} & \texttt{uv.\allowbreak{}lock} in repo root \\
-\end{longtable}
-}

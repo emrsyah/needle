@@ -1,19 +1,5 @@
 \chapter{Literature Review}\label{sec:2}
 
-\begin{quote}
-\textbf{DRAFT --- not submission-ready.} - \textbf{Venue status (checked
-2026-10-11):} every venue in the reference list has been checked against
-Semantic Scholar's publication record (batch lookup by arXiv ID),
-Crossref, the official proceedings, or the paper itself. ``preprint''
-means no peer-reviewed venue was found, so the paper is cited as arXiv.
-Two items remain to confirm on a primary page: CaRR at ACL 2026
-(Semantic Scholar only) and Search-R1 at COLM 2025 (the paper's own
-statement; Semantic Scholar lists arXiv). - \textbf{Paper descriptions:}
-these are drawn from abstracts and the project's research notes
-(\texttt{docs/\allowbreak{}research/\allowbreak{}}). Before submission,
-confirm each characterization against the full paper.
-\end{quote}
-
 This chapter reviews the background needed for the thesis:
 
 \begin{itemize}
@@ -87,14 +73,18 @@ relies on:
   \textbf{Supporting facts.} Annotators marked the exact sentences, as
   (paragraph title, sentence index) pairs, that are needed to answer
   each question. The dataset evaluates answers with exact match (EM) and
-  token F1, and evaluates supporting-fact prediction separately.
+  token F1, and evaluates supporting-fact prediction separately with
+  \textbf{Sup-EM} (the predicted set equals the gold set) and Sup-F1.
+  Its \textbf{joint metrics} (Joint-EM, Joint-F1) require the answer and
+  the supporting facts to be right together. Chapter~\ref{sec:4} reports
+  these alongside the thesis's own grounding measures.
 \end{itemize}
 
 These sentence-level labels make it possible to check whether a model's
 evidence is correct with a simple rule, without a human or a model
 acting as judge.
 
-\textbf{Citation evaluation.} Gao et al.~(2023 ✓, EMNLP) introduced
+\textbf{Citation evaluation.} Gao et al.~(2023) introduced
 \textbf{ALCE}, a benchmark for LLMs that generate text with citations.
 ALCE treats correctness and citation quality as separate dimensions, and
 separates \emph{citation recall} (is every statement supported by the
@@ -117,9 +107,9 @@ grammar: on each turn it either searches or gives a final answer with
 citations (Chapter~\ref{sec:3}).
 
 Prompting alone does not guarantee that a model uses tools well. Jin et
-al.~(2025 ✓, COLM) argue that prompted LLMs may not know how to interact
-with a search engine optimally. This motivates training the agent's tool
-use with reinforcement learning.
+al.~(2025) argue that prompted LLMs may not know how to interact with a
+search engine optimally. This motivates training the agent's tool use
+with reinforcement learning.
 
 \section{Reinforcement learning for LLMs}\label{sec:2.5}
 
@@ -143,7 +133,7 @@ Instead, it samples a group of outputs for the same prompt and uses each
 output's reward relative to the group, normalized by the group's mean
 and standard deviation, as its advantage.
 
-\textbf{DeepSeek-R1} (DeepSeek-AI, 2025 ✓, Nature) showed that GRPO with
+\textbf{DeepSeek-R1} (DeepSeek-AI, 2025) showed that GRPO with
 rule-based, verifiable rewards can train strong reasoning. Its rewards
 checked answer accuracy and output format, with no learned reward model.
 VEGR follows the same principle: every reward term can be checked by
@@ -160,15 +150,15 @@ Two lines of recent work modify GRPO, and this thesis tests both.
 \begin{itemize}
 \tightlist
 \item
-  \textbf{Dr.~GRPO} (Liu et al., 2025, preprint) identifies an
-  optimization bias in GRPO and removes its length and
-  standard-deviation normalization terms. This thesis uses only the
-  second change, computing advantages without dividing by the standard
-  deviation (run R4).
+  \textbf{Dr.~GRPO} (Liu et al., 2025) identifies an optimization bias
+  in GRPO and removes its length and standard-deviation normalization
+  terms. This thesis tests only the second change, computing advantages
+  without dividing by the standard deviation (run R4, ``GRPO without std
+  normalisation''). R4 is therefore a partial ablation, not Dr.~GRPO.
 \item
-  \textbf{DAPO} (Yu et al., 2025 ✓, NeurIPS) proposes several changes
-  for large-scale RL. One of them is \textbf{dynamic sampling}: groups
-  whose outputs all get the same reward are dropped, and more groups are
+  \textbf{DAPO} (Yu et al., 2025) proposes several changes for
+  large-scale RL. One of them is \textbf{dynamic sampling}: groups whose
+  outputs all get the same reward are dropped, and more groups are
   sampled until the batch has a learning signal. The thesis adapts this
   idea in run R0-dyn.
 \end{itemize}
@@ -183,8 +173,8 @@ project train on a single 48 GB GPU.
 
 \section{Reinforcement learning for search agents}\label{sec:2.6}
 
-\textbf{Search-R1} (Jin et al., 2025 ✓, COLM) is the main reference
-point for this thesis. It trains an LLM to issue search queries during
+\textbf{Search-R1} (Jin et al., 2025) is the main reference point for
+this thesis. It trains an LLM to issue search queries during
 step-by-step reasoning, using RL with a \textbf{simple outcome-based
 reward}: whether the final answer is correct. The training covers
 multi-turn trajectories, and retrieved tokens are masked from the loss.
@@ -199,17 +189,46 @@ its largest gains on multi-hop questions. This supports the idea, used
 in VEGR, that rewarding intermediate search quality helps beyond the
 final answer alone.
 
+Several other 2025 systems train search agents with RL, mostly with
+outcome rewards:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{R1-Searcher} (Song et al., 2025) and \textbf{ReSearch} (Chen
+  et al., 2025) use RL to teach an LLM when and how to call a search
+  tool during reasoning.
+\item
+  \textbf{DeepResearcher} (Zheng et al., 2025) scales this training to
+  real-world web environments.
+\item
+  \textbf{ZeroSearch} (Sun et al., 2025) avoids the cost of a real
+  search engine during training by simulating search.
+\item
+  \textbf{StepSearch} (Wang et al., 2025) adds step-wise rewards to PPO,
+  rewarding individual search steps against gold evidence rather than
+  only the final answer.
+\end{itemize}
+
 These systems share two properties that this thesis departs from:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  They are usually trained and reported at multi-GPU scale.
+  They are trained at multi-GPU scale. Search-R1 trains ``on a single
+  node with 8 H100 GPUs'' (Jin et al., 2025, App. B.2), and AutoRefine
+  ``on 8 NVIDIA A100-80GB GPUs'' (Shi et al., 2025, App. B.1).
 \item
   Their main reward is answer correctness. A correct answer does not
   show that the model used, or could point to, the evidence behind it.
 \end{enumerate}
+
+They also report their main results from a single training run.
+Search-R1 reports no seeds or variances. AutoRefine's main table is
+single-run, with a three-seed check only in an appendix (App. C.2). CaRR
+(Section~\ref{sec:2.7}) trains each configuration once and repeats only
+the evaluation.
 
 \section{Grounding and evidence-based rewards}\label{sec:2.7}
 
@@ -227,12 +246,12 @@ Two 2026 papers address evidence directly in search-agent RL:
 \begin{itemize}
 \tightlist
 \item
-  \textbf{CaRR / C-GRPO} (Zhang et al., 2026, ACL) breaks multi-hop
-  questions into single-hop rubrics. A judge LLM checks whether each
-  rubric is supported by the cited content, and the rubric reward counts
-  only when the answer is correct. The authors report that under
-  outcome-only GRPO, agents learn \textbf{shortcut answers} and make
-  fewer tool calls. This matches the shortcut behaviour reported in
+  \textbf{CaRR / C-GRPO} (Zhang et al., 2026) breaks multi-hop questions
+  into single-hop rubrics. A judge LLM checks whether each rubric is
+  supported by the cited content, and the rubric reward counts only when
+  the answer is correct. The authors report that under outcome-only
+  GRPO, agents learn \textbf{shortcut answers} and make fewer tool
+  calls. This matches the shortcut behaviour reported in
   Chapter~\ref{sec:4}.
 \item
   \textbf{STAMP} (Xu et al., 2026, preprint) credits each search step
@@ -241,28 +260,76 @@ Two 2026 papers address evidence directly in search-agent RL:
   evidence-coverage rewards are now common in this line of work.
 \end{itemize}
 
-\textbf{Position of this thesis.} Both CaRR and STAMP rely on an
-\textbf{LLM judge or verifier}, which adds cost and possible bias. They
-also work with live web search at larger model scales. VEGR instead uses
-HotpotQA's gold supporting facts and a deterministic retriever, so every
-evidence term is computed exactly by rule. The individual terms of VEGR
-are not new (Section~\ref{sec:3.4}). What this thesis adds is a
-judge-free combination for a small, single-GPU setting, together with a
-controlled multi-seed test of what that combination changes.
+\textbf{Rule-based and model-based citation rewards without an LLM
+judge.} Judge-free evidence rewards already exist.
+
+\begin{itemize}
+\tightlist
+\item
+  Huang et al.~(2024) train models to generate text with citations using
+  fine-grained rewards for correctness and citation quality.
+\item
+  StepSearch (Section~\ref{sec:2.6}) rewards search steps against gold
+  evidence.
+\item
+  Several 2026 preprints also target evidence and retrieval inside
+  search-agent RL:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    PROGRESS (Paul et al., 2026) rewards covering the essential search
+    queries proposed by frozen teacher models.
+  \item
+    Huang et al.~(2026a) assign credit to intermediate retrieval steps.
+  \item
+    BiCAA (Huang et al., 2026b) adds a step-level reward for steps that
+    bring new evidence.
+  \item
+    Zhu et al.~(2026) derive dense step rewards from estimates of fact
+    utility.
+  \end{itemize}
+\item
+  Two further papers are evaluations rather than training methods:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    HERALD (Liu et al., 2026) audits rule-based ``proof-of-retrieval''
+    rewards. It finds a citation-laundering attack and repairs it by
+    penalising citations to passages that were never retrieved, the same
+    rule that VEGR's evidence failure enforces.
+  \item
+    Khan and colleagues (Khan et al., 2026) find that agents trained
+    with outcome-based RLVR still post-rationalise their citations at
+    the base model's rate.
+  \end{itemize}
+\end{itemize}
+
+\textbf{Position of this thesis.} CaRR and STAMP rely on an \textbf{LLM
+judge or verifier}, which adds cost and possible bias, but rule-based
+alternatives also exist, as listed above. VEGR's terms are not new
+(Section~\ref{sec:3.4}), and it is not a new kind of reward. What this
+thesis contributes is a \textbf{controlled study}: a judge-free,
+rule-checked evidence reward tested over three seeds against an
+outcome-only control, in a small single-GPU setting where every evidence
+term can be computed exactly from HotpotQA's gold supporting facts.
 
 \section{Reward hacking and evaluating RL}\label{sec:2.8}
 
-\textbf{Reward hacking.} Skalse et al.~(2022 ✓, NeurIPS; the proceedings
-title is ``Defining and Characterizing Reward Gaming'', while the arXiv
-title is ``\ldots Reward Hacking'') formally define reward hacking:
-optimizing an imperfect proxy reward lowers performance on the true
-objective. They argue that proxies that cannot be hacked are rare. Gao,
-Schulman and Hilton (2023) measure the same effect with learned reward
-models: optimizing a proxy too hard eventually hurts the true (``gold'')
-score. In this thesis, the proxy is answer correctness and the true
-objective is a correct \emph{and} grounded answer. Chapter~\ref{sec:4}
-reports cases where the outcome-only policy satisfied the proxy without
-citing evidence.
+\textbf{Reward hacking.} Skalse et al.~(2022; the proceedings title is
+``Defining and Characterizing Reward Gaming'', while the arXiv title is
+``\ldots Reward Hacking'') formally define reward hacking: optimizing an
+imperfect proxy reward lowers performance on the true objective. They
+argue that proxies that cannot be hacked are rare. Gao, Schulman and
+Hilton (2023) measure the same effect with learned reward models:
+optimizing a proxy too hard eventually hurts the true (``gold'') score.
+In this thesis, the proxy is answer correctness and the true objective
+is a correct \emph{and} grounded answer. Chapter~\ref{sec:4} reports
+outcome-only policies that satisfied the proxy without citing evidence.
+In this case, however, the behaviour follows directly from the reward
+definition (Section~\ref{sec:3.4}), so it is better described as a
+predictable consequence of reward design than as an unexpected exploit.
 
 \textbf{Evaluating RL with few runs.} RL results vary considerably
 between random seeds.
@@ -302,18 +369,19 @@ How this thesis addresses it
 \bottomrule\noalign{}
 \endlastfoot
 \textbf{G1} Correct ≠ grounded & Outcome-only rewards (Search-R1) do not
-check evidence; CaRR reports shortcut answers; reward hacking theory
-(Skalse) & Measure grounding directly with sentence-level gold evidence;
-compare R0 with VEGR \\
-\textbf{G2} Evidence rewards need an LLM judge & CaRR and STAMP use LLM
-judges or verifiers; ALCE uses an NLI model & VEGR checks evidence by
-rule against HotpotQA supporting facts \\
-\textbf{G3} Search-agent RL is reported at multi-GPU scale & Search-R1,
-AutoRefine, CaRR, STAMP & Single 48 GB GPU, LoRA, about \$2.25 per
-run \\
+check evidence; CaRR reports shortcut answers & Measure grounding
+directly with sentence-level gold evidence; compare R0 with VEGR \\
+\textbf{G2} Judge-free evidence rewards exist but are rarely tested over
+several seeds against an outcome-only control & CaRR and STAMP use LLM
+judges or verifiers; rule-based rewards (Huang et al., 2024; StepSearch;
+HERALD) are reported without such a control & Rule-checked VEGR compared
+with an outcome-only reward over three seeds \\
+\textbf{G3} Search-agent RL is reported at multi-GPU scale & Search-R1
+(8 × H100) and AutoRefine (8 × A100) & Single 48 GB GPU, LoRA, about
+\$2.25 per run \\
 \textbf{G4} Single-run results mistake seed noise for method effects &
-Henderson 2018; Agarwal 2021 & 3 seeds per method; paired bootstrap
-CIs \\
+Henderson 2018; Agarwal 2021; Search-R1 and CaRR train each
+configuration once & 3 seeds per method; seed-aware bootstrap CIs \\
 \end{longtable}
 }
 
@@ -327,9 +395,11 @@ rewarding the answer alone?}
 
 \section{References}\label{references}
 
-Draft list. The ``Checked via'' column records how each venue was
-verified on 2026-10-11. Final formatting follows the university's
-citation style {[}TODO: which style{]}.
+The ``Checked via'' column records how each venue was verified
+(2026-10-11 and 2026-10-13). ``preprint'' means no peer-reviewed venue
+could be confirmed, so the paper is cited as arXiv. In the final
+document the list is formatted in IEEE style as the DAFTAR PUSTAKA of
+the Telkom University template.
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
@@ -365,10 +435,43 @@ Hu, E. J., et al.~(2022). LoRA: Low-Rank Adaptation of Large Language
 Models. arXiv:2106.09685 & ICLR 2022 & Semantic Scholar \\
 Jin, B., et al.~(2025). Search-R1: Training LLMs to Reason and Leverage
 Search Engines with Reinforcement Learning. arXiv:2503.09516 & COLM 2025
-& the paper's own statement {[}TODO: confirm on the COLM site{]} \\
+& ``Published as a conference paper at COLM 2025'' header of the arXiv
+v5 PDF \\
 Liu, Z., et al.~(2025). Understanding R1-Zero-Like Training: A Critical
-Perspective. arXiv:2503.20783 & preprint & Semantic Scholar lists arXiv
-only \\
+Perspective. arXiv:2503.20783 & COLM 2025 & ``Published as a conference
+paper at COLM 2025'' header of the arXiv v2 PDF \\
+Chen, et al.~(2025). ReSearch: Learning to Reason with Search for LLMs
+via Reinforcement Learning. arXiv:2503.19470 & NeurIPS 2025 & arXiv
+comment field \\
+Huang, et al.~(2024). Training Language Models to Generate Text with
+Citations via Fine-grained Rewards. arXiv:2402.04315 & ACL 2024 & arXiv
+comment field \\
+Huang, et al.~(2026a). Beyond Outcome Rewards: Constructing and
+Assigning Retrieval Credit for Search Agents. arXiv:2610.10179 &
+preprint & arXiv \\
+Huang, et al.~(2026b). BiCAA: Bidirectional Credit Assignment for
+Search-Augmented Agent. arXiv:2608.01321 & preprint & arXiv \\
+Khan, et al.~(2026). Attributable Post-Rationalization in RAG Citations:
+A Controlled Reproduction and an RLVR Comparison. arXiv:2609.23053 &
+preprint & arXiv \\
+Liu, et al.~(2026). HERALD: Counterfactual Audits and Minimal Repairs
+for Proof-of-Retrieval Rewards. arXiv:2608.06012 & preprint & arXiv \\
+Paul, et al.~(2026). PROGRESS: Coverage-guided RL to Train
+Search-augmented LLM Agent. arXiv:2608.00969 & Interspeech 2026 & arXiv
+comment field \\
+Song, et al.~(2025). R1-Searcher: Incentivizing the Search Capability in
+LLMs via Reinforcement Learning. arXiv:2503.05592 & preprint & arXiv \\
+Sun, et al.~(2025). ZeroSearch: Incentivize the Search Capability of
+LLMs without Searching. arXiv:2505.04588 & preprint & arXiv \\
+Wang, et al.~(2025). StepSearch: Igniting LLMs Search Ability via
+Step-Wise Proximal Policy Optimization. arXiv:2505.15107 & preprint &
+arXiv; Semantic Scholar lists arXiv only \\
+Zheng, et al.~(2025). DeepResearcher: Scaling Deep Research via
+Reinforcement Learning in Real-world Environments. arXiv:2504.03160 &
+preprint & arXiv \\
+Zhu, et al.~(2026). Dense Process Supervision for Search Agents via Fact
+Utility Estimation. arXiv:2609.00833 & EMNLP 2026 & arXiv comment
+field \\
 Ouyang, L., et al.~(2022). Training language models to follow
 instructions with human feedback. arXiv:2203.02155 & NeurIPS 2022 &
 Semantic Scholar (proceedings DOI) \\
@@ -404,7 +507,8 @@ System at Scale. arXiv:2503.14476 & NeurIPS 2025 & NeurIPS
 proceedings \\
 Zhang, J., Lv, X., Feng, L., Hou, L., Li, J. (2026). Chaining the
 Evidence: Robust Reinforcement Learning for Deep Search Agents with
-Citation-Aware Rubric Rewards (CaRR). arXiv:2601.06021 & ACL 2026 &
-Semantic Scholar only {[}TODO: confirm in the ACL Anthology{]} \\
+Citation-Aware Rubric Rewards (CaRR). arXiv:2601.06021 & preprint &
+arXiv v1 PDF has no venue header; Semantic Scholar lists ACL 2026, not
+confirmed on a primary page \\
 \end{longtable}
 }
