@@ -1,4 +1,4 @@
-# BAB 2 — KAJIAN PUSTAKA
+# BAB 2 KAJIAN PUSTAKA
 
 Bab ini membahas landasan teori dan penelitian terkait yang dibutuhkan dalam tugas akhir ini. Subbab 2.1 hingga 2.4 membahas komponen dasar, yaitu model bahasa, *retrieval*, *multi-hop question answering* dengan bukti, dan agen LLM. Subbab 2.5 membahas *reinforcement learning* (RL) untuk LLM, mulai dari PPO hingga GRPO beserta perbaikan-perbaikannya yang terbaru. Subbab 2.6 dan 2.7 mengkaji agen pencarian yang dilatih dengan RL serta *reward* berbasis bukti, yaitu bidang yang menjadi tempat kontribusi penelitian ini. Subbab 2.8 membahas *reward hacking* dan cara mengevaluasi hasil RL. Terakhir, Subbab 2.9 merangkum celah penelitian dan bagaimana penelitian ini akan menjawabnya.
 

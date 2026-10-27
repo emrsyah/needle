@@ -1,4 +1,4 @@
-# BAB 3 — PERANCANGAN SISTEM
+# BAB 3 PERANCANGAN SISTEM
 
 Penelitian ini dirancang sebagai eksperimen terkontrol untuk melatih dan mengevaluasi agen pencarian berbasis *reinforcement learning* dengan *reward* berbasis bukti yang dapat diverifikasi. Model, data, lingkungan, *hyperparameter*, dan protokol evaluasi akan dibuat tetap; yang berubah antar-*run* hanyalah fungsi *reward* (dan, pada satu varian, *optimizer*). Secara umum, sistem yang diusulkan terdiri atas empat bagian utama, sebagaimana ditunjukkan pada Gambar 3.1. Bagian pertama adalah penyiapan *dataset* HotpotQA beserta anotasi *supporting facts*. Bagian kedua adalah lingkungan pencarian, tempat agen melakukan pencarian BM25 dan memberikan jawaban beserta sitasi. Bagian ketiga adalah fungsi *reward* yang diusulkan, yaitu *Verifiable Evidence-Grounded Reward* (VEGR), yang menilai setiap episode terhadap jawaban emas dan *supporting facts* emas. Bagian keempat adalah pelatihan bergaya GRPO yang membandingkan *reward* dari beberapa episode pada pertanyaan yang sama untuk memperbarui *adapter* LoRA. Setelah pelatihan, setiap model akan dievaluasi pada himpunan *holdout* beku.
 

@@ -38,10 +38,10 @@ REFERENCES = HERE / "chapters-id" / "daftar-pustaka.md"
 LOGO = HERE / "figures" / "telkom_logo.png"
 ORDER = ["abstrak", "bab1-pendahuluan", "jadwal-kegiatan", "bab2-kajian-pustaka", "bab3-perancangan-sistem"]
 
-TITLE_ID = ("Memberi Reward pada Bukti, Bukan Hanya pada Jawaban: Verifiable Evidence-Grounded "
-            "Reward untuk Melatih Agen Pencarian dengan GRPO")
-TITLE_EN = ("Rewarding the Evidence, Not Just the Answer: Verifiable Evidence-Grounded Rewards "
-            "for Training Search Agents with GRPO")
+TITLE_ID = ("Pemanfaatan Reward Berbasis Evidence untuk Pelatihan Agen Pencarian dengan "
+            "Reinforcement Learning di Multi-Hop Question Answering (MHQA)")
+TITLE_EN = ("Utilizing Evidence-Based Rewards for Training Search Agents with "
+            "Reinforcement Learning in Multi-Hop Question Answering (MHQA)")
 NIM = "103012300339"
 NAME = "Muhammad Emirsyah Makarim"
 COURSE = "IF-47-DSIS.02 (CAK4EAB2)"

@@ -1,4 +1,4 @@
-# BAB 4 — HASIL DAN ANALISIS
+# BAB 4 HASIL DAN ANALISIS
 
 Seluruh angka pada bab ini berasal dari berkas episode *holdout* (`results/2026-10-10-*/`, `results/2026-10-11-fixes/results/*/episodes.jsonl`) dan log pelatihan (`metrics.jsonl`). Nilai per *run* dan nilai *bootstrap* yang hanya me-*resample* pertanyaan dihitung oleh `scripts/make_thesis_figures.py` dan disimpan di `docs/thesis/figures/figures_data.json`. *Bootstrap* yang memperhitungkan *seed*, metrik gabungan (*joint*) HotpotQA, dan rincian *rollout* pelatihan dihitung oleh `scripts/peer_review_reanalysis.py` (`logs/2026-10-13-peer-review-reanalysis.md`).
 

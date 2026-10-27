@@ -1,4 +1,4 @@
-# LAMPIRAN A — PROMPT LENGKAP AGEN
+# LAMPIRAN A PROMPT LENGKAP AGEN
 
 Lampiran ini memuat *prompt* lengkap yang diterima agen untuk satu pertanyaan *holdout* nyata. Teks tersebut dihasilkan oleh fungsi `build_prompt` (`src/needle/inference/runner.py`), yaitu fungsi yang sama dengan yang digunakan pada pelatihan dan evaluasi. *Prompt* ini diberikan kepada Qwen2.5-7B-Instruct sebagai satu pesan pengguna melalui *chat template* milik model.
 

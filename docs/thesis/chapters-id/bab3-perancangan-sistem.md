@@ -1,4 +1,4 @@
-# BAB 3 — PERANCANGAN SISTEM
+# BAB 3 PERANCANGAN SISTEM
 
 Bab ini menjelaskan bagaimana agen pencarian dibangun, dilatih, dan dievaluasi. Subbab 3.1 memberikan gambaran umum rancangan penelitian. Subbab 3.2–3.6 menjelaskan data, lingkungan pencarian, *reward* yang diusulkan (VEGR), model *policy*, dan algoritma pelatihan. Subbab 3.7 mendefinisikan protokol evaluasi, Subbab 3.8 memuat daftar eksperimen, dan Subbab 3.9 melaporkan detail implementasi dan komputasi.
 

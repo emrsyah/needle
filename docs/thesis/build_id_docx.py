@@ -21,7 +21,8 @@ from docx.shared import Pt, RGBColor
 HERE = Path(__file__).resolve().parent
 SOURCE = HERE / "chapters-id"
 OUT_DIR = HERE / "output"
-DEFAULT_REFERENCE = Path.home() / "Downloads" / "Proposal TA Last.docx"
+BODY_STYLES = ("normal", "body text", "first paragraph", "compact", "bibliography")
+DEFAULT_REFERENCE =Path.home() / "Downloads" / "Proposal TA Last.docx"
 ORDER = [
     "abstrak",
     "bab1-pendahuluan",
@@ -90,7 +91,9 @@ def apply_styles(doc: Document) -> None:
             # Sub-headings start at the text margin, like the body text.
             style.paragraph_format.left_indent = Pt(0)
             style.paragraph_format.first_line_indent = Pt(0)
-        elif style.name in ("Normal", "Body Text", "First Paragraph", "Compact"):
+            # Room between a heading and the text under it.
+            style.paragraph_format.space_after = Pt(24 if style.name == "Heading 1" else 6)
+        elif style.name.lower() in BODY_STYLES:
             style.font.size = Pt(12)
             style.paragraph_format.line_spacing = 1.5
             style.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
@@ -150,9 +153,11 @@ def align_paragraphs(doc: Document) -> None:
         text = p.text.strip()
         if text.startswith(("Gambar ", "Tabel ")) and p.runs and p.runs[0].bold:
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        if style in ("Body Text", "First Paragraph", "Compact", "Normal", "Bibliography") and not text.startswith(("Gambar ", "Tabel ")):
+        # The proposal template names its body style "normal" (lower case), so compare case-insensitively.
+        if style.lower() in BODY_STYLES and text and not text.startswith(("Gambar ", "Tabel ")):
             if p.alignment != WD_ALIGN_PARAGRAPH.CENTER:
                 p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            p.paragraph_format.line_spacing = 1.5
         # Images: centre the paragraph that holds a picture.
         if p._p.xpath(".//pic:pic"):
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
