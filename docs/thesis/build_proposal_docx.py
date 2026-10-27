@@ -15,7 +15,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches
@@ -26,28 +25,15 @@ from build_id_docx import (
     OUT_DIR,
     align_paragraphs,
     apply_styles,
-    centered,
-    move_to_front,
-    page_break,
+    front_matter,
     pandoc_to_docx,
+    place_front_matter,
     style_tables,
 )
 
 SOURCE = HERE / "proposal-id"
 REFERENCES = HERE / "chapters-id" / "daftar-pustaka.md"
-LOGO = HERE / "figures" / "telkom_logo.png"
 ORDER = ["abstrak", "bab1-pendahuluan", "jadwal-kegiatan", "bab2-kajian-pustaka", "bab3-perancangan-sistem"]
-
-TITLE_ID = ("Pemanfaatan Reward Berbasis Evidence untuk Pelatihan Agen Retrieval-Augmented Generation "
-            "(RAG) dengan Reinforcement Learning di Multi-Hop Question Answering (MHQA)")
-TITLE_EN = ("Utilizing Evidence-Based Rewards for Training Retrieval-Augmented Generation (RAG) "
-            "Agents with Reinforcement Learning in Multi-Hop Question Answering (MHQA)")
-NIM = "103012300339"
-NAME = "Muhammad Emirsyah Makarim"
-COURSE = "IF-47-DSIS.02 (CAK4EAB2)"
-SUPERVISOR = "Dr. Gamma Kosala, S.Si"
-SUPERVISOR_NIP = "NIP: 26920005"
-APPROVAL_DATE = "Bandung, 27 Oktober 2026"
 
 CITATION = re.compile(r"\[(\d{1,2}(?:\s*,\s*\d{1,2})*)((?:,\s*Lampiran[^\]]*)?)\]")
 MATH = re.compile(r"\$\$.*?\$\$|\$[^$\n]+\$|`[^`\n]*`", re.S)
@@ -112,50 +98,6 @@ def shade_schedule(doc) -> None:
                     cell._tc.get_or_add_tcPr().append(shading)
 
 
-def front_matter(doc) -> list:
-    elements = []
-    add = elements.append
-    add(centered(doc, TITLE_ID, 14)._p)
-    add(centered(doc)._p)
-    add(centered(doc, "Proposal Tugas Akhir")._p)
-    add(centered(doc)._p)
-    add(centered(doc, COURSE)._p)
-    add(centered(doc)._p)
-    add(centered(doc, NIM)._p)
-    add(centered(doc, NAME)._p)
-    add(centered(doc)._p)
-    logo = centered(doc)
-    logo.add_run().add_picture(str(LOGO), width=Inches(1.37), height=Inches(1.83))
-    add(logo._p)
-    add(centered(doc)._p)
-    for line in ("Program Studi Sarjana Informatika", "Fakultas Informatika", "Universitas Telkom", "Bandung", "2025/2026"):
-        add(centered(doc, line)._p)
-
-    heading = doc.add_paragraph("Lembar Persetujuan", style="Heading 1")
-    heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    heading.paragraph_format.page_break_before = True
-    add(heading._p)
-    add(centered(doc, TITLE_ID)._p)
-    add(centered(doc, TITLE_EN)._p)
-    add(centered(doc)._p)
-    add(centered(doc, f"NIM : {NIM}")._p)
-    add(centered(doc, NAME)._p)
-    add(centered(doc)._p)
-    add(centered(doc, "Proposal ini diajukan sebagai usulan pembuatan tugas akhir pada", bold=False)._p)
-    add(centered(doc, "Program Studi Informatika", bold=False)._p)
-    add(centered(doc, "Fakultas Informatika Universitas Telkom", bold=False)._p)
-    add(centered(doc)._p)
-    add(centered(doc, APPROVAL_DATE, bold=False)._p)
-    add(centered(doc, "Menyetujui", bold=False)._p)
-    add(centered(doc)._p)
-    add(centered(doc, "Calon Pembimbing 1", bold=False)._p)
-    for _ in range(4):
-        add(centered(doc)._p)
-    add(centered(doc, SUPERVISOR)._p)
-    add(centered(doc, SUPERVISOR_NIP, bold=False)._p)
-    return elements
-
-
 def main() -> None:
     reference = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_REFERENCE
     OUT_DIR.mkdir(exist_ok=True)
@@ -176,15 +118,14 @@ def main() -> None:
         doc = pandoc_to_docx(files, SOURCE, raw, reference)
     apply_styles(doc)
 
-    # Old proposal order: cover, Lembar Persetujuan, ABSTRAK, DAFTAR ISI, BAB 1 ...
-    body = doc.element.body
-    toc = body.find(qn("w:sdt"))
-    bab1 = next(p for p in doc.paragraphs if p.text.strip().upper().startswith("BAB 1"))
-    if toc is not None:
-        body.remove(toc)
-        bab1._p.addprevious(toc)
-        toc.addprevious(page_break(doc)._p)
-    move_to_front(doc, front_matter(doc))
+    front = front_matter(
+        doc,
+        "Proposal Tugas Akhir",
+        "Lembar Persetujuan",
+        "Proposal ini diajukan sebagai usulan pembuatan tugas akhir pada",
+        "Calon Pembimbing 1",
+    )
+    place_front_matter(doc, front)
 
     style_tables(doc)
     shade_schedule(doc)

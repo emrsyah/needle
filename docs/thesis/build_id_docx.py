@@ -16,7 +16,7 @@ from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from docx.shared import Pt, RGBColor
+from docx.shared import Inches, Pt, RGBColor
 
 HERE = Path(__file__).resolve().parent
 SOURCE = HERE / "chapters-id"
@@ -34,22 +34,19 @@ ORDER = [
     "lampiran-a-prompt",
 ]
 
-# Cover text taken from the proposal's cover page.
-COVER = [
-    ("Rewarding the Evidence, Not Just the Answer: Verifiable Evidence-Grounded "
-     "Rewards for Training Search Agents with GRPO", 14, True),
-    ("", 12, False),
-    ("Tugas Akhir", 12, True),
-    ("", 12, False),
-    ("103012300339", 12, True),
-    ("Muhammad Emirsyah Makarim", 12, True),
-    ("", 12, False),
-    ("Program Studi Sarjana Informatika", 12, True),
-    ("Fakultas Informatika", 12, True),
-    ("Universitas Telkom", 12, True),
-    ("Bandung", 12, True),
-    ("2025/2026", 12, True),
-]
+LOGO = HERE / "figures" / "telkom_logo.png"
+
+# Cover and approval-sheet details, as on the student's proposal.
+TITLE_ID = ("Pemanfaatan Reward Berbasis Evidence untuk Pelatihan Agen Retrieval-Augmented Generation "
+            "(RAG) dengan Reinforcement Learning di Multi-Hop Question Answering (MHQA)")
+TITLE_EN = ("Utilizing Evidence-Based Rewards for Training Retrieval-Augmented Generation (RAG) "
+            "Agents with Reinforcement Learning in Multi-Hop Question Answering (MHQA)")
+NIM = "103012300339"
+NAME = "Muhammad Emirsyah Makarim"
+COURSE = "IF-47-DSIS.02 (CAK4EAB2)"
+SUPERVISOR = "Dr. Gamma Kosala, S.Si"
+SUPERVISOR_NIP = "NIP: 26920005"
+APPROVAL_DATE = "Bandung, 27 Oktober 2026"
 
 
 def pandoc_to_docx(files: list[Path], resource_dir: Path, raw: Path, reference: Path) -> Document:
@@ -166,6 +163,63 @@ def align_paragraphs(doc: Document) -> None:
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
 
+def front_matter(doc: Document, document_type: str, sheet_title: str, sheet_text: str, supervisor_role: str) -> list:
+    """Cover page and approval sheet in the layout of the student's proposal."""
+    elements = []
+    add = elements.append
+    add(centered(doc, TITLE_ID, 14)._p)
+    add(centered(doc)._p)
+    add(centered(doc, document_type)._p)
+    add(centered(doc)._p)
+    add(centered(doc, COURSE)._p)
+    add(centered(doc)._p)
+    add(centered(doc, NIM)._p)
+    add(centered(doc, NAME)._p)
+    add(centered(doc)._p)
+    logo = centered(doc)
+    logo.add_run().add_picture(str(LOGO), width=Inches(1.37), height=Inches(1.83))
+    add(logo._p)
+    add(centered(doc)._p)
+    for line in ("Program Studi Sarjana Informatika", "Fakultas Informatika", "Universitas Telkom", "Bandung", "2025/2026"):
+        add(centered(doc, line)._p)
+
+    heading = doc.add_paragraph(sheet_title, style="Heading 1")
+    heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    heading.paragraph_format.page_break_before = True
+    add(heading._p)
+    add(centered(doc, TITLE_ID)._p)
+    add(centered(doc, TITLE_EN)._p)
+    add(centered(doc)._p)
+    add(centered(doc, f"NIM : {NIM}")._p)
+    add(centered(doc, NAME)._p)
+    add(centered(doc)._p)
+    add(centered(doc, sheet_text, bold=False)._p)
+    add(centered(doc, "Program Studi Informatika", bold=False)._p)
+    add(centered(doc, "Fakultas Informatika Universitas Telkom", bold=False)._p)
+    add(centered(doc)._p)
+    add(centered(doc, APPROVAL_DATE, bold=False)._p)
+    add(centered(doc, "Menyetujui", bold=False)._p)
+    add(centered(doc)._p)
+    add(centered(doc, supervisor_role, bold=False)._p)
+    for _ in range(4):
+        add(centered(doc)._p)
+    add(centered(doc, SUPERVISOR)._p)
+    add(centered(doc, SUPERVISOR_NIP, bold=False)._p)
+    return elements
+
+
+def place_front_matter(doc: Document, front: list) -> None:
+    """Order: cover, approval sheet, ABSTRAK, DAFTAR ISI, BAB 1 (pandoc puts the TOC first)."""
+    body = doc.element.body
+    toc = body.find(qn("w:sdt"))
+    bab1 = next(p for p in doc.paragraphs if p.text.strip().upper().startswith("BAB 1"))
+    if toc is not None:
+        body.remove(toc)
+        bab1._p.addprevious(toc)
+        toc.addprevious(page_break(doc)._p)
+    move_to_front(doc, front)
+
+
 def main() -> None:
     reference = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_REFERENCE
     OUT_DIR.mkdir(exist_ok=True)
@@ -173,10 +227,14 @@ def main() -> None:
     target = OUT_DIR / "tugas-akhir-id.docx"
     doc = pandoc_to_docx([SOURCE / f"{name}.md" for name in ORDER], SOURCE, raw, reference)
     apply_styles(doc)
-    # Cover page before everything else (pandoc puts the table of contents first).
-    cover = [centered(doc, text, size, bold)._p for text, size, bold in COVER]
-    cover.append(page_break(doc)._p)
-    move_to_front(doc, cover)
+    front = front_matter(
+        doc,
+        "Tugas Akhir",
+        "Lembar Pengesahan",
+        "Tugas akhir ini diajukan sebagai salah satu syarat kelulusan pada",
+        "Pembimbing 1",
+    )
+    place_front_matter(doc, front)
     style_tables(doc)
     align_paragraphs(doc)
     doc.save(str(target))
