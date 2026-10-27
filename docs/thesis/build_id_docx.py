@@ -8,7 +8,6 @@ Output: docs/thesis/output/tugas-akhir-id.docx. Export to PDF from Word (or expo
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 
@@ -52,28 +51,25 @@ COVER = [
 ]
 
 
-def main() -> None:
-    reference = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_REFERENCE
-    OUT_DIR.mkdir(exist_ok=True)
-    raw = OUT_DIR / "tugas-akhir-id.raw.docx"
-    target = OUT_DIR / "tugas-akhir-id.docx"
-    files = [str(SOURCE / f"{name}.md") for name in ORDER]
+def pandoc_to_docx(files: list[Path], resource_dir: Path, raw: Path, reference: Path) -> Document:
     pypandoc.convert_file(
-        files,
+        [str(f) for f in files],
         "docx",
         format="markdown-implicit_figures",
         outputfile=str(raw),
         extra_args=[
             f"--reference-doc={reference}",
-            f"--resource-path={SOURCE}",
+            f"--resource-path={resource_dir}",
             "--toc",
             "--toc-depth=2",
             "--metadata=toc-title:DAFTAR ISI",
         ],
     )
-    doc = Document(str(raw))
+    return Document(str(raw))
 
-    # The proposal's body text: Times New Roman 12 pt, 1.5 line spacing, black headings.
+
+def apply_styles(doc: Document) -> None:
+    """The proposal's body text: Times New Roman 12 pt, 1.5 line spacing, black headings."""
     for style in doc.styles:
         if style.type != 1:  # paragraph styles only
             continue
@@ -95,24 +91,33 @@ def main() -> None:
             style.font.size = Pt(12)
             style.paragraph_format.line_spacing = 1.5
 
-    # Cover page before everything else (pandoc puts the table of contents first).
-    body = doc.element.body
-    cover = []
-    for text, size, bold in COVER:
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+def centered(doc: Document, text: str = "", size: int = 12, bold: bool = True):
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    if text:
         run = p.add_run(text)
         run.bold = bold
         run.font.size = Pt(size)
-        cover.append(p._p)
+    return p
+
+
+def page_break(doc: Document):
     p = doc.add_paragraph()
     p.add_run().add_break(WD_BREAK.PAGE)
-    cover.append(p._p)
-    for index, element in enumerate(cover):
+    return p
+
+
+def move_to_front(doc: Document, elements: list) -> None:
+    """Move freshly appended block elements to the start of the body, in order."""
+    body = doc.element.body
+    for index, element in enumerate(elements):
         body.remove(element)
         body.insert(index, element)
 
-    # Tables: single borders, 10 pt single-spaced text, as in the proposal.
+
+def style_tables(doc: Document) -> None:
+    """Single borders, 10 pt single-spaced text, as in the proposal."""
     for table in doc.tables:
         tbl_pr = table._tbl.tblPr
         borders = OxmlElement("w:tblBorders")
@@ -131,6 +136,8 @@ def main() -> None:
                     for run in cp.runs:
                         run.font.size = Pt(10)
 
+
+def align_paragraphs(doc: Document) -> None:
     for p in doc.paragraphs:
         style = p.style.name if p.style is not None else ""
         if style == "Heading 1":
@@ -145,6 +152,21 @@ def main() -> None:
         # Images: centre the paragraph that holds a picture.
         if p._p.xpath(".//pic:pic"):
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+
+def main() -> None:
+    reference = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_REFERENCE
+    OUT_DIR.mkdir(exist_ok=True)
+    raw = OUT_DIR / "tugas-akhir-id.raw.docx"
+    target = OUT_DIR / "tugas-akhir-id.docx"
+    doc = pandoc_to_docx([SOURCE / f"{name}.md" for name in ORDER], SOURCE, raw, reference)
+    apply_styles(doc)
+    # Cover page before everything else (pandoc puts the table of contents first).
+    cover = [centered(doc, text, size, bold)._p for text, size, bold in COVER]
+    cover.append(page_break(doc)._p)
+    move_to_front(doc, cover)
+    style_tables(doc)
+    align_paragraphs(doc)
     doc.save(str(target))
     raw.unlink()
     print(f"wrote {target}")
