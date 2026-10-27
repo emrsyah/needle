@@ -90,6 +90,7 @@ def apply_styles(doc: Document) -> None:
         elif style.name in ("Normal", "Body Text", "First Paragraph", "Compact"):
             style.font.size = Pt(12)
             style.paragraph_format.line_spacing = 1.5
+            style.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
 
 def centered(doc: Document, text: str = "", size: int = 12, bold: bool = True):
@@ -146,8 +147,8 @@ def align_paragraphs(doc: Document) -> None:
         text = p.text.strip()
         if text.startswith(("Gambar ", "Tabel ")) and p.runs and p.runs[0].bold:
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        if style in ("Body Text", "First Paragraph", "Compact", "Normal") and not text.startswith(("Gambar ", "Tabel ")):
-            if p.alignment is None:
+        if style in ("Body Text", "First Paragraph", "Compact", "Normal", "Bibliography") and not text.startswith(("Gambar ", "Tabel ")):
+            if p.alignment != WD_ALIGN_PARAGRAPH.CENTER:
                 p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         # Images: centre the paragraph that holds a picture.
         if p._p.xpath(".//pic:pic"):

@@ -46,7 +46,8 @@ NIM = "103012300339"
 NAME = "Muhammad Emirsyah Makarim"
 COURSE = "IF-47-DSIS.02 (CAK4EAB2)"
 SUPERVISOR = "Dr. Gamma Kosala, S.Si"
-SUPERVISOR_NIP = "NIP: 21920013"
+SUPERVISOR_NIP = "NIP: 26920005"
+APPROVAL_DATE = "Bandung, 27 Oktober 2026"
 
 CITATION = re.compile(r"\[(\d{1,2}(?:\s*,\s*\d{1,2})*)((?:,\s*Lampiran[^\]]*)?)\]")
 MATH = re.compile(r"\$\$.*?\$\$|\$[^$\n]+\$|`[^`\n]*`", re.S)
@@ -124,7 +125,7 @@ def front_matter(doc) -> list:
     add(centered(doc, NAME)._p)
     add(centered(doc)._p)
     logo = centered(doc)
-    logo.add_run().add_picture(str(LOGO), width=Inches(1.37))
+    logo.add_run().add_picture(str(LOGO), width=Inches(1.37), height=Inches(1.83))
     add(logo._p)
     add(centered(doc)._p)
     for line in ("Program Studi Sarjana Informatika", "Fakultas Informatika", "Universitas Telkom", "Bandung", "2025/2026"):
@@ -144,7 +145,7 @@ def front_matter(doc) -> list:
     add(centered(doc, "Program Studi Informatika", bold=False)._p)
     add(centered(doc, "Fakultas Informatika Universitas Telkom", bold=False)._p)
     add(centered(doc)._p)
-    add(centered(doc, "Bandung, ....................... 2026", bold=False)._p)
+    add(centered(doc, APPROVAL_DATE, bold=False)._p)
     add(centered(doc, "Menyetujui", bold=False)._p)
     add(centered(doc)._p)
     add(centered(doc, "Calon Pembimbing 1", bold=False)._p)
