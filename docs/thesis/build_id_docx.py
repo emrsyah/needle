@@ -87,6 +87,9 @@ def apply_styles(doc: Document) -> None:
             style.font.color.rgb = RGBColor(0, 0, 0)
             style.font.bold = True
             style.font.size = Pt({"Heading 1": 14}.get(style.name, 12))
+            # Sub-headings start at the text margin, like the body text.
+            style.paragraph_format.left_indent = Pt(0)
+            style.paragraph_format.first_line_indent = Pt(0)
         elif style.name in ("Normal", "Body Text", "First Paragraph", "Compact"):
             style.font.size = Pt(12)
             style.paragraph_format.line_spacing = 1.5
