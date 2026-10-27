@@ -69,7 +69,18 @@ def pandoc_to_docx(files: list[Path], resource_dir: Path, raw: Path, reference: 
 def apply_styles(doc: Document) -> None:
     """The proposal's body text: Times New Roman 12 pt, 1.5 line spacing, black headings."""
     for style in doc.styles:
+        if style.type == 2 and style.name == "Verbatim Char":  # inline and block code runs
+            style.font.name = "Consolas"
+            continue
         if style.type != 1:  # paragraph styles only
+            continue
+        if style.name == "Source Code":
+            # Code blocks: monospace, left-aligned, single-spaced (never justified).
+            style.font.name = "Consolas"
+            style.font.size = Pt(8.5)
+            style.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            style.paragraph_format.line_spacing = 1.0
+            style.paragraph_format.left_indent = Pt(12)
             continue
         style.font.name = "Times New Roman"
         rpr = style.element.get_or_add_rPr()

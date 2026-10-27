@@ -188,13 +188,17 @@ $$
 
 ```
 for step, question in enumerate(sample(train_split, 256, seed)):
-    episodes = [run_episode(policy, question) for _ in range(8)]   # multi-turn
-    rewards  = [reward_fn(ep, gold(question)) for ep in episodes]  # VEGR or variant; invalid → −1
+    # multi-turn
+    episodes = [run_episode(policy, question) for _ in range(8)]
+    # VEGR or variant; invalid → −1
+    rewards  = [reward_fn(ep, gold(question)) for ep in episodes]
     if all rewards equal:
-        log_skip(step); continue                                    # zero-variance group
-    A = (rewards − mean(rewards)) / (std(rewards) + 1e-6)          # R4: no division
+        log_skip(step); continue          # zero-variance group
+    # R4: no division
+    A = (rewards − mean(rewards)) / (std(rewards) + 1e-6)
     for each episode i:
-        ρ = exp(mean_token_logp_θ(actions_i) − mean_token_logp_old(actions_i))  # mean over all action tokens
+        # mean over all action tokens
+        ρ = exp(mean_token_logp_θ(actions_i) − mean_token_logp_old(actions_i))
         loss += −min(ρ·A_i, clip(ρ, 0.8, 1.2)·A_i)
     update LoRA with AdamW (lr 2e-5, grad clip 1.0)
 ```
