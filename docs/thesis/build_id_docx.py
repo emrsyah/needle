@@ -102,6 +102,9 @@ def apply_styles(doc: Document) -> None:
 def centered(doc: Document, text: str = "", size: int = 12, bold: bool = True):
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    # Front-matter lines are single-spaced so the cover and approval sheet fit one page each.
+    p.paragraph_format.line_spacing = 1.0
+    p.paragraph_format.space_after = Pt(6)
     if text:
         run = p.add_run(text)
         run.bold = bold
@@ -157,7 +160,7 @@ def align_paragraphs(doc: Document) -> None:
         if style.lower() in BODY_STYLES and text and not text.startswith(("Gambar ", "Tabel ")):
             if p.alignment != WD_ALIGN_PARAGRAPH.CENTER:
                 p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-            p.paragraph_format.line_spacing = 1.5
+                p.paragraph_format.line_spacing = 1.5
         # Images: centre the paragraph that holds a picture.
         if p._p.xpath(".//pic:pic"):
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
