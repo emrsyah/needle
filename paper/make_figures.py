@@ -61,7 +61,15 @@ def main() -> None:
         fig, axes = original_subplots(*a, **kw)
         if state["scale"] and size == (5.5, 3.6):  # Fig. 4.3: separate two close labels
             axes.annotate = _spread_labels(axes.annotate)
+        if not state["scale"]:  # system diagram: name the search term as in the paper (Srch)
+            axes.text = _rename_terms(axes.text)
         return fig, axes
+
+    def _rename_terms(text_fn):
+        def wrapped(x, y, s, *a, **kw):
+            return text_fn(x, y, s.replace("0.1·cost", "0.1·srch"), *a, **kw)
+
+        return wrapped
 
     def _spread_labels(annotate):
         nudges = {"R0 s8": ((-4, 8), "right"), "R0-dyn s8": ((-6, 8), "left")}

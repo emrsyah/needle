@@ -23,7 +23,7 @@ bash paper/build.sh --no-figs  # PDF only
 
 ## Few-shot baseline (B0-FS, issue #9)
 
-1. On a RunPod L40S pod set up with `docs/runbooks/runpod.md` steps 0–3: `cd /workspace/needle && git pull && bash scripts/run_fewshot_b0.sh`. Expect ~0.5–1 GPU-hour (~$0.55–1.10); the script stops itself before $2.20 of GPU time.
+1. On a RunPod L40S pod set up with `docs/runbooks/runpod.md` steps 0–3: `cd /workspace/needle && git pull && bash scripts/run_fewshot_b0.sh`. Expect ~0.5–1 GPU-hour; the script stops itself after 2.0 h.
 2. Download `results/<date>-b0-fewshot/` into the repo, then **stop the pod**.
 3. `python -P paper/fill_fewshot.py results/<date>-b0-fewshot && bash paper/build.sh --no-figs`.
 
