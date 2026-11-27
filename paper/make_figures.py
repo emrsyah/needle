@@ -62,13 +62,46 @@ def main() -> None:
         fig, axes = original_subplots(*a, **kw)
         if state["scale"] and size == (5.5, 3.6):  # Fig. 4.3: separate two close labels
             axes.annotate = _spread_labels(axes.annotate)
-        if not state["scale"]:  # system diagram: name the search term as in the paper (Srch)
-            axes.text = _rename_terms(axes.text)
+        if not state["scale"]:  # system diagram: English labels for the paper
+            axes.text = _english_labels(axes.text)
         return fig, axes
 
-    def _rename_terms(text_fn):
+    # The thesis book draws the system diagram with Indonesian labels; the paper
+    # keeps its English ones (search term named Srch, as in the paper text).
+    english = {
+        "Pertanyaan": "Question",
+        "distractor setting\n10 paragraf\n(2 emas + 8 pengecoh)": (
+            "distractor setting\n10 paragraphs\n(2 gold + 8 distractors)"
+        ),
+        "Agen (policy)": "Agent (policy)",
+        "Qwen2.5-7B-Instruct\n+ LoRA (r=16)\nsatu aksi per giliran": (
+            "Qwen2.5-7B-Instruct\n+ LoRA (r=16)\none action per turn"
+        ),
+        "BM25 pada 10\nparagraf, 3 dokumen teratas\nmaks. 3 pencarian": (
+            "BM25 over the 10\nparagraphs, top-3 docs\nmax 3 searches"
+        ),
+        "Reward VEGR": "VEGR reward",
+        "EM + F1 + cakupan\n+ presisi + recall\n− 0,1·srch − 0,1·dup\ntidak valid → −1": (
+            "EM + F1 + coverage\n+ precision + recall\n− 0.1·srch − 0.1·dup\ninvalid → −1"
+        ),
+        "Pembaruan GRPO": "GRPO update",
+        "G = 8 rollout\nadvantage dinormalisasi grup\nobjektif clipped, ε = 0,2\n"
+        "grup variansi nol dilewati": (
+            "G = 8 rollouts\ngroup-normalized advantage\nclipped objective, ε = 0.2\n"
+            "zero-variance groups skipped"
+        ),
+        "Label emas": "Gold labels",
+        "jawaban\nsupporting facts\n(judul, kalimat)": (
+            "answer\nsupporting facts\n(title, sentence)"
+        ),
+        "hasil": "results",
+        "episode\nselesai": "finished\nepisode",
+        "perbarui LoRA": "update LoRA",
+    }
+
+    def _english_labels(text_fn):
         def wrapped(x, y, s, *a, **kw):
-            return text_fn(x, y, s.replace("0.1·cost", "0.1·srch"), *a, **kw)
+            return text_fn(x, y, english.get(s, s), *a, **kw)
 
         return wrapped
 

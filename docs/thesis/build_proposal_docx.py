@@ -15,10 +15,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-from docx.oxml import OxmlElement
-from docx.oxml.ns import qn
-from docx.shared import Inches
-
 from build_id_docx import (
     DEFAULT_REFERENCE,
     HERE,
@@ -30,10 +26,19 @@ from build_id_docx import (
     place_front_matter,
     style_tables,
 )
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from docx.shared import Inches
 
 SOURCE = HERE / "proposal-id"
 REFERENCES = HERE / "chapters-id" / "daftar-pustaka.md"
-ORDER = ["abstrak", "bab1-pendahuluan", "jadwal-kegiatan", "bab2-kajian-pustaka", "bab3-perancangan-sistem"]
+ORDER = [
+    "abstrak",
+    "bab1-pendahuluan",
+    "jadwal-kegiatan",
+    "bab2-kajian-pustaka",
+    "bab3-perancangan-sistem",
+]
 
 CITATION = re.compile(r"\[(\d{1,2}(?:\s*,\s*\d{1,2})*)((?:,\s*Lampiran[^\]]*)?)\]")
 MATH = re.compile(r"\$\$.*?\$\$|\$[^$\n]+\$|`[^`\n]*`", re.S)
@@ -68,7 +73,7 @@ def renumber(texts: list[str], known: set[int]) -> tuple[list[str], list[int]]:
         # Leave maths and code untouched.
         pieces, last = [], 0
         for m in MATH.finditer(text):
-            pieces.append(CITATION.sub(replace, text[last:m.start()]))
+            pieces.append(CITATION.sub(replace, text[last : m.start()]))
             pieces.append(m.group(0))
             last = m.end()
         pieces.append(CITATION.sub(replace, text[last:]))
@@ -110,7 +115,9 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         files = []
         # Numbered names: pypandoc sorts the input list, so the prefix fixes the order.
-        for index, (name, text) in enumerate(zip(ORDER + ["daftar-pustaka"], texts + [bibliography])):
+        for index, (name, text) in enumerate(
+            zip(ORDER + ["daftar-pustaka"], texts + [bibliography], strict=False)
+        ):
             path = Path(tmp) / f"{index:02d}-{name}.md"
             path.write_text(text, encoding="utf-8")
             files.append(path)

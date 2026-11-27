@@ -6,7 +6,7 @@
 
 [3] Z. Shao dkk., "DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models," *arXiv preprint* arXiv:2402.03300, 2024.
 
-[4] DeepSeek-AI, "DeepSeek-R1," *Nature*, 2025.
+[4] DeepSeek-AI, "DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learning," *Nature*, vol. 645, no. 8081, hlm. 633–638, 2025. doi:10.1038/s41586-025-09422-z.
 
 [5] J. Skalse, N. Howe, D. Krasheninnikov, dan D. Krueger, "Defining and Characterizing Reward Gaming," dalam *Advances in Neural Information Processing Systems (NeurIPS)*, 2022. arXiv:2209.13085.
 
@@ -38,30 +38,38 @@
 
 [19] Y. Shi dkk., "Search and Refine During Think: Facilitating Knowledge Refinement for Improved Retrieval-Augmented Reasoning," dalam *Advances in Neural Information Processing Systems (NeurIPS)*, 2025. doi:10.52202/085713-5211. arXiv:2505.11277.
 
-[20] Song dkk., "R1-Searcher: Incentivizing the Search Capability in LLMs via Reinforcement Learning," *arXiv preprint* arXiv:2503.05592, 2025.
+[20] H. Song dkk., "R1-Searcher: Incentivizing the Search Capability in LLMs via Reinforcement Learning," *arXiv preprint* arXiv:2503.05592, 2025.
 
-[21] Chen dkk., "ReSearch: Learning to Reason with Search for LLMs via Reinforcement Learning," dalam *Advances in Neural Information Processing Systems (NeurIPS)*, 2025. arXiv:2503.19470.
+[21] M. Chen dkk., "ReSearch: Learning to Reason with Search for LLMs via Reinforcement Learning," dalam *Advances in Neural Information Processing Systems (NeurIPS)*, 2025. arXiv:2503.19470.
 
-[22] Zheng dkk., "DeepResearcher: Scaling Deep Research via Reinforcement Learning in Real-world Environments," *arXiv preprint* arXiv:2504.03160, 2025.
+[22] Y. Zheng dkk., "DeepResearcher: Scaling Deep Research via Reinforcement Learning in Real-world Environments," *arXiv preprint* arXiv:2504.03160, 2025.
 
-[23] Sun dkk., "ZeroSearch: Incentivize the Search Capability of LLMs without Searching," *arXiv preprint* arXiv:2505.04588, 2025.
+[23] H. Sun dkk., "ZeroSearch: Incentivize the Search Capability of LLMs without Searching," *arXiv preprint* arXiv:2505.04588, 2025.
 
-[24] Wang dkk., "StepSearch: Igniting LLMs Search Ability via Step-Wise Proximal Policy Optimization," *arXiv preprint* arXiv:2505.15107, 2025.
+[24] Z. Wang dkk., "StepSearch: Igniting LLMs Search Ability via Step-Wise Proximal Policy Optimization," *arXiv preprint* arXiv:2505.15107, 2025.
 
 [25] Z. Wu dkk., "Fine-Grained Human Feedback Gives Better Rewards for Language Model Training," dalam *Advances in Neural Information Processing Systems (NeurIPS)*, 2023. arXiv:2306.01693.
 
-[26] Huang dkk., "Training Language Models to Generate Text with Citations via Fine-grained Rewards," dalam *Proceedings of the Annual Meeting of the Association for Computational Linguistics (ACL)*, 2024. arXiv:2402.04315.
+[26] C. Huang dkk., "Training Language Models to Generate Text with Citations via Fine-grained Rewards," dalam *Proceedings of the Annual Meeting of the Association for Computational Linguistics (ACL)*, 2024. arXiv:2402.04315.
 
-[27] Paul dkk., "PROGRESS: Coverage-guided RL to Train Search-augmented LLM Agent," dalam *Interspeech*, 2026. arXiv:2608.00969.
+[27] S. Paul dkk., "PROGRESS: Coverage-guided RL to Train Search-augmented LLM Agent," *arXiv preprint* arXiv:2608.00969, 2026.
 
-[28] Huang dkk., "Beyond Outcome Rewards: Constructing and Assigning Retrieval Credit for Search Agents," *arXiv preprint* arXiv:2610.10179, 2026.
+[28] W. Huang dkk., "Beyond Outcome Rewards: Constructing and Assigning Retrieval Credit for Search Agents," *arXiv preprint* arXiv:2610.10179, 2026.
 
-[29] Huang dkk., "BiCAA: Bidirectional Credit Assignment for Search-Augmented Agent," *arXiv preprint* arXiv:2608.01321, 2026.
+[29] Y. Huang, B. Xu, H. Cao, dan C. Zhu, "BiCAA: Bidirectional Credit Assignment for Search-Augmented Agent," *arXiv preprint* arXiv:2608.01321, 2026.
 
-[30] Zhu dkk., "Dense Process Supervision for Search Agents via Fact Utility Estimation," dalam *Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing (EMNLP)*, 2026. arXiv:2609.00833.
+[30] R. Zhu dkk., "Dense Process Supervision for Search Agents via Fact Utility Estimation," dalam *Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing (EMNLP)*, 2026. arXiv:2609.00833.
 
-[31] Liu dkk., "HERALD: Counterfactual Audits and Minimal Repairs for Proof-of-Retrieval Rewards," *arXiv preprint* arXiv:2608.06012, 2026.
+[31] Z. Liu dkk., "HERALD: Counterfactual Audits and Minimal Repairs for Proof-of-Retrieval Rewards," *arXiv preprint* arXiv:2608.06012, 2026.
 
-[32] Khan dkk., "Attributable Post-Rationalization in RAG Citations: A Controlled Reproduction and an RLVR Comparison," *arXiv preprint* arXiv:2609.23053, 2026.
+[32] M. Khan dan M. S. I. Bhuyan, "Attributable Post-Rationalization in RAG Citations: A Controlled Reproduction and an RLVR Comparison," *arXiv preprint* arXiv:2609.23053, 2026.
 
 [33] L. Gao, J. Schulman, dan J. Hilton, "Scaling Laws for Reward Model Overoptimization," dalam *International Conference on Machine Learning (ICML)*, 2023. arXiv:2210.10760.
+
+[34] P. Lewis dkk., "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks," dalam *Advances in Neural Information Processing Systems (NeurIPS)*, 2020. arXiv:2005.11401.
+
+[35] R. J. Williams, "Simple Statistical Gradient-Following Algorithms for Connectionist Reinforcement Learning," *Machine Learning*, vol. 8, no. 3–4, hlm. 229–256, 1992. doi:10.1007/BF00992696.
+
+[36] B. Efron, "Bootstrap Methods: Another Look at the Jackknife," *The Annals of Statistics*, vol. 7, no. 1, hlm. 1–26, 1979. doi:10.1214/aos/1176344552.
+
+[37] C. J. Clopper dan E. S. Pearson, "The Use of Confidence or Fiducial Limits Illustrated in the Case of the Binomial," *Biometrika*, vol. 26, no. 4, hlm. 404–413, 1934. doi:10.1093/biomet/26.4.404.
