@@ -145,3 +145,20 @@ def test_collector_keeps_citation_validation_in_environment_boundary() -> None:
     assert record.failure_kind is FailureKind.EVIDENCE
     assert record.training_reward == -1.0
     assert "unknown document" in (record.failure_message or "")
+
+
+def test_few_shot_collector_prepends_demonstration_only_when_enabled() -> None:
+    actions = ("SEARCH[Ursula]", "ANSWER[United States] CITATIONS[Ursula K. Le Guin|1]")
+    plain = SequencePolicy(actions)
+    few_shot = SequencePolicy(actions)
+    plain_record = RolloutCollector(plain, top_k=1, max_searches=1).collect(_example())
+    shot_record = RolloutCollector(few_shot, top_k=1, max_searches=1, few_shot=True).collect(
+        _example()
+    )
+
+    assert "Worked example" not in plain.calls[0][0]
+    assert "Worked example" in few_shot.calls[0][0]
+    # The demonstration comes before the real question and the reward is unchanged.
+    prompt = few_shot.calls[0][0]
+    assert prompt.index("End of worked example") < prompt.index(f"Question: {_example().question}")
+    assert shot_record.training_reward == plain_record.training_reward
