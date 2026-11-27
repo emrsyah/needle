@@ -337,7 +337,7 @@ R3 s8:  ANSWER[Pedro Rodríguez] CITATIONS[Formula One drivers from Mexico|1;
         2014 Bahrain Grand Prix|3; 2009 Singapore Grand Prix|5]
 ```
 
-Ini merupakan sisi biaya dari *trade-off* R3: bobot cakupan yang lebih besar mendorong *policy* untuk menambah sitasi, dan sebagian tambahan tersebut bukan kalimat emas.
+Ini merupakan sisi negatif dari *trade-off* R3: bobot cakupan yang lebih besar mendorong *policy* untuk menambah sitasi, dan sebagian tambahan tersebut bukan kalimat emas.
 
 *Trace 4: kegagalan bukti (R1 s8).* Aksi akhir `ANSWER[yes] CITATIONS[Ambroise Thomas|0; Provesi|1]` ditandai tidak valid sebagai kegagalan bukti, karena sitasinya merujuk pada dokumen "Provesi" yang tidak dikenal oleh lingkungan. Judul "Provesi" tidak termasuk dalam 10 paragraf milik pertanyaan tersebut, sehingga sitasinya merujuk pada dokumen yang tidak ada. Bahkan setelah pelatihan, kegagalan bukti tetap menjadi jenis kegagalan yang paling umum pada R1–R4 secara agregat per metode (Tabel 4.6), meskipun tidak pada setiap *run* (misalnya R2 s8 dan R3 s8).
 
