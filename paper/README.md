@@ -23,8 +23,9 @@ bash paper/build.sh --no-figs  # PDFs only
 | `refs.bib` | References, converted from `docs/thesis/chapters-id/daftar-pustaka.md`. arXiv IDs were checked on 2026-11-27. |
 | `make_figures.py` | Re-renders the thesis figures at IEEE column width into `figures/`. It wraps `scripts/make_thesis_figures.py`, so the book figures are unchanged. |
 | `make_dynamics.py` | Renders `figures/fig_dynamics.pdf`, the training diagnostics for all 16 runs (32-step blocks). It reads each run's `metrics.jsonl`. |
-| `fewshot.tex` | Values for the few-shot baseline row (B0-FS). A placeholder until the run exists. |
+| `fewshot.tex` | Values for the few-shot baseline row (B0-FS), filled from `results/2026-11-27-b0-fewshot`. |
 | `fill_fewshot.py` | Writes `fewshot.tex` from a finished B0-FS run. |
+| `fewshot_ci.py` | Seed-aware bootstrap intervals for B0-FS vs. B0 and each trained method vs. B0-FS (CPU, about 30 s). |
 
 ## Few-shot baseline (B0-FS)
 
