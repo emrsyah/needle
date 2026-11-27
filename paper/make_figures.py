@@ -42,6 +42,7 @@ def main() -> None:
 
     figs = load_thesis_module()
     plt = figs.plt
+    plt.rcParams["pdf.fonttype"] = 42  # embed TrueType, not Type 3 (IEEE PDF eXpress)
     figs.OUT = args.out.resolve()
     figs.METHOD_LABEL["R4"] = "R4 no std norm."
 
