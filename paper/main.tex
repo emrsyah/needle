@@ -1,0 +1,233 @@
+% Needle: conference paper version of the thesis (TA), for ICGHIT 2027 (6-page limit).
+% Template: ICGHIT conference LaTeX template (IEEE conference template, 2024-06-27; IEEEtran v1.8b,
+% pinned in this folder). Build: bash paper/build.sh -> main.pdf and main-anon.pdf.
+% main-anon.tex defines \anonymous and inputs this file (blind-review version).
+% Numbers: docs/thesis/chapters-id/ and logs/2026-10-13-peer-review-reanalysis.md.
+% "TRIM" comments mark what to cut first; "EXTEND" comments mark what to add if the limit grows.
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% T1 makes IEEEtran's Times (Type 1) apply under XeTeX/tectonic as well as pdfLaTeX.
+\usepackage[T1]{fontenc}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage[hidelinks,bookmarks=false]{hyperref}  % no PDF outline (IEEE PDF eXpress)
+\graphicspath{{figures/}}
+
+\input{fewshot.tex}
+\newcommand{\pgem}{P-gEM}
+\ifdefined\anonymous
+  \newcommand{\coderepo}{an anonymized repository}
+\else
+  \newcommand{\coderepo}{\url{https://github.com/emrsyah/needle}}
+\fi
+
+\begin{document}
+
+\title{Rewarding Evidence as Well as Answers:\\
+Verifiable Evidence-Grounded Rewards for Training\\ Search Agents with GRPO}
+
+\ifdefined\anonymous
+\author{\IEEEauthorblockN{Anonymous Author(s)}
+\IEEEauthorblockA{\textit{Affiliation withheld for blind review}}}
+\else
+\author{\IEEEauthorblockN{Emirsyah}
+\IEEEauthorblockA{\textit{School of Computing} \\
+\textit{Telkom University}\\
+Bandung, Indonesia \\
+emirsyah@telkomuniversity.ac.id}}
+\fi
+
+\maketitle
+
+\begin{abstract}
+Search agents trained with reinforcement learning (RL) are usually rewarded only for a correct final answer, which says nothing about whether the agent found or can show the evidence behind it. We study a judge-free alternative, VEGR (Verifiable Evidence-Grounded Reward): the agent answers with sentence-level citations, and VEGR checks each citation by rule against HotpotQA's gold supporting facts, rewarding correct answers, correct citations and useful searches and penalizing invalid actions. We train Qwen2.5-7B-Instruct with LoRA using a GRPO-style policy gradient on one 48\,GB GPU; the agent searches the question's own 10 paragraphs with BM25. Sixteen runs cover five configurations with three seeds plus one diagnostic run, evaluated on a frozen 300-question holdout with seed-aware bootstrap intervals. Training lifts exact match (EM) by about 20 points over the un-tuned model (22.3\%), mostly because the agent learns the action protocol; a one-example prompt recovers about 6 of these points. VEGR keeps accuracy about the same as outcome-only reward (R0) (no detectable difference: $+1.0$ EM, 95\% CI $[-3.6, +5.4]$); its gain is in evidence grounding. Precision-grounded EM rises by 24.4 points (CI $[+8.8, +37.3]$), and outcome-only reward, which penalizes an invalid citation but never rewards a correct one, stops citing on 2 of 3 seeds. VEGR does not raise evidence coverage over the un-tuned model.
+\end{abstract}
+
+\begin{IEEEkeywords}
+agentic AI, search agents, reinforcement learning, verifiable rewards, citation grounding, multi-hop question answering
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+Agentic AI systems act in an environment over several steps instead of answering in one pass. Search agents are a common case: a large language model (LLM) decides when to search, what to search for, and when to stop and answer~\cite{yao2023react}. Prompting alone does not reliably produce good search behaviour, so recent work trains search agents with RL. Search-R1~\cite{jin2025searchr1} and its successors~\cite{song2025r1searcher,chen2025research,zheng2025deepresearcher} use an \emph{outcome-only reward}: an episode scores 1 if the final answer matches the gold answer. GRPO~\cite{shao2024deepseekmath,deepseek2025r1} made this lighter on compute by replacing the learned critic with a group-relative baseline.
+
+An outcome-only reward is a proxy. A correct answer does not show that the agent found, used, or can point to the evidence behind it, and optimizing a proxy invites behaviour that scores well without doing what was intended~\cite{skalse2022reward,gao2023overoptimization}. Citation-aware rewards exist~\cite{zhang2026carr,huang2024citations}, but they usually rely on an LLM judge or a trained model, which adds an extra model to the training loop and its own biases. Most RL results for search agents also come from single runs, although seed variance in RL is large~\cite{henderson2018matters,agarwal2021precipice}.
+
+HotpotQA~\cite{yang2018hotpotqa} annotates each question with the exact sentences that support the answer, so a sentence-level citation can be checked by rule, without a judge. We use this to ask:
+\begin{itemize}
+\item \textbf{RQ1:} Does GRPO-style training improve a 7B search agent over the un-tuned model?
+\item \textbf{RQ2:} Does a verifiable evidence-grounded reward improve evidence grounding while keeping accuracy about the same as outcome-only reward?
+\item \textbf{RQ3} (exploratory): How do reward variants and optimizer changes affect grounding and search behaviour?
+\end{itemize}
+
+Our contributions are: (i) VEGR, a judge-free, sentence-level, protocol-enforcing reward for multi-turn search agents; (ii) evidence from three seeds that VEGR and outcome-only reward show no detectable accuracy difference while VEGR keeps citations precise, and that outcome-only reward drops citations on two of three seeds, with the mechanism traced in the training rollouts; (iii) a controlled comparison with seed-aware intervals and training diagnostics for every run; and (iv) an open single-GPU pipeline that trains and evaluates one configuration in about two GPU-hours. We do not propose a new RL algorithm or claim state-of-the-art accuracy, and the individual reward terms are not new; the contribution is their combination and the controlled evidence about what it changes.
+
+\section{Related Work}
+
+\textbf{RL for search agents.} Search-R1~\cite{jin2025searchr1}, R1-Searcher~\cite{song2025r1searcher}, ReSearch~\cite{chen2025research} and DeepResearcher~\cite{zheng2025deepresearcher} train LLMs to interleave reasoning with search using outcome-only rewards. AutoRefine~\cite{shi2025autorefine} adds a retrieval reward; StepSearch~\cite{wang2025stepsearch}, PROGRESS~\cite{paul2026progress} and dense process supervision~\cite{zhu2026dense,huang2026retrievalcredit} assign credit to individual search steps, and STAMP~\cite{xu2026stamp} does so through provenance. These works mostly score the final answer, not its citations.
+
+\textbf{Evidence and citation rewards.} ALCE~\cite{gao2023alce} separates citation precision from citation recall and finds models often precise but incomplete. Fine-grained RLHF~\cite{wu2023finegrained} and Huang et al.~\cite{huang2024citations} reward citations with learned or NLI-based scorers. CaRR~\cite{zhang2026carr} trains deep-search agents with citation-aware rubric rewards scored by an LLM judge and reports that outcome-only GRPO learns shortcut answers. VEGR is a small-scale, judge-free counterpart: its evidence terms are set comparisons against gold labels, so they need no extra model and are deterministic, but they require gold supporting facts.
+
+\textbf{GRPO variants.} Dr.\ GRPO~\cite{liu2025drgrpo} shows that GRPO's standard-deviation and length normalizations bias the update; DAPO~\cite{yu2025dapo} adds dynamic sampling, which skips zero-variance groups. We test one change from each.
+
+\section{Method}
+\label{sec:method}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.7\textwidth]{fig3_1_system.pdf}
+\caption{One training step of the search agent with VEGR and GRPO.}
+\label{fig:system}
+\end{figure*}
+
+\subsection{Environment and Action Protocol}
+Each episode is one HotpotQA question in the distractor setting: 10 Wikipedia paragraphs, 2 gold and 8 distractors, with gold supporting facts given as (title, sentence index) pairs. The searchable corpus is the question's own 10 paragraphs, indexed with Okapi BM25~\cite{robertson2009bm25}. Each turn the agent emits one action (Fig.~\ref{fig:system}): \texttt{SEARCH[query]}, which returns the top 3 whole paragraphs with numbered sentences, or the terminal \texttt{ANSWER[answer] CITATIONS[title|index; \ldots]}. An episode allows at most 3 searches. This closed corpus makes retrieval easy (the un-tuned model already reaches retrieval recall 0.83), so the task is closer to reading comprehension with a page-finding tool than to web search.
+
+An episode is \emph{invalid} on a \emph{protocol failure} (output not in the grammar), an \emph{evidence failure} (a cited title that is not one of the question's 10 paragraphs, an out-of-range sentence index, or a duplicate citation; mostly invented or mis-copied titles), or a \emph{search-limit failure} (no answer after the last search). An answer with an empty citation list is valid; we keep this loophole so that all runs share one environment.
+
+\subsection{VEGR}
+Let $G$ be the set of gold supporting facts and $C$ the set of cited sentences, both as (title, sentence index) pairs. For a valid episode,
+\begin{equation}
+R = \mathrm{EM} + \mathrm{F1} + \mathrm{Cov} + \mathrm{Prec} + \mathrm{RetR} - 0.1\,\mathrm{Srch} - 0.1\,\mathrm{Dup},
+\label{eq:vegr}
+\end{equation}
+where EM and F1 compare the normalized answer with the gold answer, RetR is the fraction of gold paragraphs returned by any search, Srch is searches used over the search limit, and Dup is the fraction of repeated queries. The two evidence terms follow the supporting-fact evaluation of HotpotQA~\cite{yang2018hotpotqa}, which scores each example by the precision and recall of its predicted supporting-fact set against the gold set:
+\begin{equation}
+\mathrm{Cov} = \frac{|G\cap C|}{|G|}, \qquad \mathrm{Prec} = \frac{|G\cap C|}{|C|}.
+\label{eq:cov}
+\end{equation}
+Evidence coverage (Cov) is HotpotQA's supporting-fact recall and citation precision (Prec) its supporting-fact precision; both are computed by exact matching of (title, index) pairs, and Prec is 0 when $C$ is empty. This is the precision/recall split of ALCE~\cite{gao2023alce}, but checked against gold labels instead of by an NLI model. An invalid episode receives $R=-1$. The weights are untuned defaults. For example, two correct answers to one question score 4.93 (both gold sentences cited, both gold paragraphs retrieved) and 2.47 (no citation, one paragraph retrieved) under VEGR, but 1 and 1 under outcome-only reward.
+
+\textbf{Reward variants.} \textbf{R0} (outcome-only) is $R=\mathrm{EM}$, still with $-1$ for invalid episodes; it mirrors Search-R1. \textbf{R1} is full VEGR. \textbf{R2} applies the search and duplicate penalties only when EM\,=\,1. \textbf{R3} doubles the coverage weight. R0 never rewards a correct citation, but an invalid one turns the episode into a $-1$ evidence failure, so whether citing pays off depends on how often the policy's citations are invalid.
+
+\subsection{Policy and Training}
+The policy is Qwen2.5-7B-Instruct~\cite{qwen2024qwen25} in bf16 with a LoRA adapter~\cite{hu2022lora} ($r=16$, $\alpha=32$) on all attention and MLP projections. The prompt states the action grammar with one example, the question, the number of searches left and all search results so far, and is rebuilt every turn.
+
+For each training question the policy samples $G=8$ episodes (temperature 1.0). Rewards are normalized within the group, $A_i=(r_i-\bar r)/(\mathrm{std}(r)+10^{-6})$, and every action in an episode shares its advantage. Groups whose 8 rewards are all equal carry no signal and are skipped. The loss is the PPO clipped surrogate~\cite{schulman2017ppo} ($\epsilon=0.2$) on the sequence-mean log-probability of the agent's tokens, with no KL term. Each group is used for exactly one optimizer step, so the clip fraction is 0 in all runs and the update is in practice REINFORCE with a group-mean baseline. Each run is one epoch over 256 training questions (one question per step; AdamW, learning rate $2\times10^{-5}$).
+
+\textbf{Optimizer variants.} \textbf{R4} uses VEGR with $A_i=r_i-\bar r$, one of the two Dr.\ GRPO changes~\cite{liu2025drgrpo} (length normalization is kept). \textbf{R0-dyn} is R0 with DAPO-style dynamic sampling~\cite{yu2025dapo}: skipped groups do not count, and the trainer draws up to 512 questions to reach 256 updates.
+
+\section{Experimental Setup}
+\label{sec:setup}
+
+\textbf{Data and runs.} HotpotQA v1.1 train is split by a deterministic hash into 85{,}573 training and 4{,}452 validation questions; the holdout is a frozen set of 300 dev questions never used to choose settings. B0 is the un-tuned model. R0--R4 are each trained with seeds 7, 8 and 9; the seed fixes both the 256 training questions and the sampling noise. R0-dyn uses seed 8 only, the seed on which R0 collapsed. B0, R0, R1 and R2 were planned before the multi-seed batch; R3, R4 and R0-dyn were added after the first holdout results, so we treat them as exploratory. \textbf{B0-FS} is a prompt-only control: the un-tuned model with one fictional two-hop worked example in the prompt\ifnum\FSpending=1{} (pending)\fi.
+
+\textbf{Evaluation.} All models answer the same 300 holdout questions with greedy decoding and no retries. \emph{EM (all)} counts invalid episodes as 0. \emph{Precision-grounded EM} (\pgem) counts an episode only if EM\,=\,1, it has at least one citation, and every citation is a gold fact; it is strict on wrong citations but lenient on missing ones, so we also report HotpotQA's \emph{Sup-EM} (cited set equals gold set) and \emph{Joint-EM} (EM and Sup-EM). Precision and coverage are averaged over completed episodes.
+
+\textbf{Statistics.} The primary intervals are a seed-aware paired bootstrap: each of 10{,}000 resamples draws 3 seeds with replacement per method and 300 questions with replacement, shared across methods; we report the 95\% percentile interval. Primary comparisons are every method vs.\ B0 and R1$-$R0; the rest are exploratory and uncorrected, and a non-significant exploratory difference is read as inconclusive.
+
+\textbf{Compute.} All runs use one NVIDIA L40S GPU (48\,GB); training plus holdout evaluation takes about 2.05\,h per run. Software: Transformers 4.57.6, PEFT 0.21.2, PyTorch 2.14.1 (B0, R1 seed 7) and 2.11.0 (later runs, after a driver change).
+
+\section{Results}
+\label{sec:results}
+
+\begin{table*}[t]
+\centering
+\caption{Holdout results, mean $\pm$ s.d.\ over seeds 7, 8, 9.}
+\label{tab:main}
+\footnotesize\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lcccccccc}
+\toprule
+Method & EM & EM (completed) & \pgem & Sup-EM & Joint-EM & Cit.\ precision & Evid.\ coverage & Completed /300 \\
+\midrule
+B0 un-tuned & 22.3 & 39.4 & 13.0 & 11.3 & 6.0 & 0.633 & 0.472 & 170 \\
+B0-FS few-shot prompt & \FSem & \FSemdone & \FSpgem & 12.0 & 4.7 & \FSprec & \FScov & \FSdone \\
+\midrule
+R0 outcome-only & 42.6$\pm$2.2 & 43.8$\pm$2.6 & 8.2$\pm$14.2 & 5.0$\pm$8.7 & 3.2$\pm$5.6 & 0.207$\pm$0.358 & 0.146$\pm$0.253 & 278--299 \\
+\textbf{R1 VEGR} & 43.6$\pm$1.5 & 45.2$\pm$1.0 & \textbf{32.7$\pm$4.8} & 11.9$\pm$10.1 & 7.1$\pm$5.8 & \textbf{0.744$\pm$0.015} & 0.440$\pm$0.095 & 287--293 \\
+R2 gated penalties & 42.7$\pm$5.4 & 44.7$\pm$5.2 & 29.8$\pm$3.1 & 15.9$\pm$4.8 & 10.0$\pm$1.9 & 0.718$\pm$0.026 & 0.483$\pm$0.051 & 283--290 \\
+R3 coverage $\times$2 & 42.3$\pm$2.0 & 44.6$\pm$2.6 & 24.7$\pm$5.4 & \textbf{24.3$\pm$4.2} & \textbf{13.4$\pm$2.2} & 0.690$\pm$0.053 & \textbf{0.569$\pm$0.033} & 282--289 \\
+R4 no std norm. & 44.0$\pm$4.0 & 45.3$\pm$3.8 & 31.0$\pm$7.7 & 12.4$\pm$8.7 & 7.4$\pm$5.3 & 0.695$\pm$0.060 & 0.441$\pm$0.085 & 288--293 \\
+R0-dyn (seed 8) & 48.7 & 48.7 & 0.0 & 0.0 & 0.0 & 0.000 & 0.000 & 300 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table}[t]
+\centering
+\caption{Paired differences (points) with seed-aware 95\% bootstrap intervals.}
+\label{tab:ci}
+\setlength{\tabcolsep}{2.5pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccc}
+\toprule
+Comparison & $\Delta$EM & $\Delta$\pgem & $\Delta$Joint-EM \\
+\midrule
+R0$-$B0 & $+20.2\,[+15.1,+25.6]$ & $-4.8\,[-16.0,+10.7]$ & $-2.8\,[-8.0,+3.4]$ \\
+R1$-$B0 & $+21.2\,[+16.4,+26.0]$ & $+19.7\,[+13.3,+26.1]$ & $+1.1\,[-5.1,+6.9]$ \\
+\textbf{R1$-$R0} & $+1.0\,[-3.6,+5.4]$ & $\mathbf{+24.4\,[+8.8,+37.3]}$ & $+3.9\,[-4.0,+11.4]$ \\
+\midrule
+R2$-$R1 & $-0.9\,[-7.1,+5.8]$ & $-2.9\,[-9.8,+3.6]$ & $+2.9\,[-2.9,+9.3]$ \\
+R3$-$R1 & $-1.2\,[-5.7,+3.3]$ & $-8.0\,[-16.1,-0.2]$ & $+6.3\,[+0.2,+13.1]$ \\
+R4$-$R1 & $+0.4\,[-5.2,+5.7]$ & $-1.7\,[-10.9,+7.7]$ & $+0.3\,[-7.0,+8.1]$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Table~\ref{tab:main} gives holdout means over the three seeds; B0, B0-FS and R0-dyn are single evaluations. EM, \pgem, Sup-EM and Joint-EM are percentages of all 300 questions, and ``EM (completed)'' is over completed episodes only. Table~\ref{tab:ci} gives paired differences; rows below the line are exploratory.
+
+\subsection{RQ1: Training vs.\ the Un-tuned Model}
+The un-tuned model reaches 22.3\% EM, mainly because only 170 of 300 episodes complete: of its 130 failures, 85 are evidence failures (mostly invented titles), 37 protocol failures and 8 search-limit failures. Every trained method gains about 20 EM points, and every seed-aware interval excludes zero (Table~\ref{tab:ci}; R2, R3 and R4 vs.\ B0 are $+20.3$, $+20.0$ and $+21.7$). Most of the gain comes from protocol learning: no trained run loses more than 22 episodes, while EM on completed episodes moves only from 39.4\% to 43.8--45.3\%.
+
+\textbf{Prompt-only control.} With one worked example in the prompt, the un-tuned model (B0-FS) reaches \FSem\% EM and completes \FSdone{} of 300 episodes, $+6.0$ EM over B0 (seed-aware interval $[+1.0,+11.0]$). The example mostly stops invented citations (evidence failures fall from 85 to 20), while protocol failures rise from 37 to 54 as the model copies the example's multi-line layout; EM on completed episodes does not improve (\FSemdone\% vs.\ 39.4\%). Prompting alone thus recovers about 6 of the roughly 20 EM points, and training still adds about 15 over B0-FS: R1$-$B0-FS is $+15.2$ $[+9.9,+20.8]$, and every trained method lies between $+14.0$ and $+15.7$ with intervals above zero. On \pgem, R1 leads B0-FS by 13.7 points ($[+6.8,+20.7]$).
+
+\subsection{RQ2: Same Accuracy, Better Grounding}
+\textbf{Accuracy.} R1$-$R0 is $+1.0$ EM with interval $[-3.6,+5.4]$: there is no detectable accuracy difference. The data rule out a loss of more than about 3.6 points from switching to VEGR but cannot rule out a smaller one. EM on completed episodes is also close (45.2\% vs.\ 43.8\%).
+
+\textbf{Grounding.} VEGR raises \pgem{} by 24.4 points over R0 (interval $[+8.8,+37.3]$), the largest between-method effect in the study (Fig.~\ref{fig:emprec}). Most of this comes from two R0 seeds (8 and 9) that learn to answer with \emph{no citations at all}: all 122 and 135 of their correct answers are uncited. Seed 9 still searches 2.27 times per episode and retrieves the gold paragraphs (recall 0.86), then does not cite them. R0 seed 7 keeps citing at B0-level precision (0.621) but always uses all three searches, and 229 of its 278 completed episodes repeat a query, a reward-neutral drift since R0 gives the search penalty zero weight. R1 keeps precision at 0.726--0.754 on all seeds. The precision gain is not a selection effect: on the 136 questions completed by every run, precision is 0.627 for B0, 0.646 for R0 seed 7 and 0.750--0.790 for R1. R1 and R0 differ in six reward terms and in the number of updates (about 240 vs.\ 130), so this measures the whole VEGR package, not one term.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\columnwidth]{fig4_3_em_vs_precision.pdf}
+\caption{Holdout EM against citation precision, one point per run.}
+\label{fig:emprec}
+\end{figure}
+
+Fig.~\ref{fig:emprec} plots each run's EM (failures count as 0) against its citation precision on completed episodes: all trained runs share one accuracy band; every run whose reward includes evidence terms keeps citing, while two R0 seeds and R0-dyn sit at zero precision.
+
+\textbf{Why R0 stops citing.} The training rollouts explain seed 8. In its first 32 steps, 176 rollouts tried to cite: 90 were evidence failures ($-1$) and 86 were valid with mean reward 0.50, while 42 uncited valid rollouts averaged 0.36. A valid citation was worth slightly more, but the expected reward of \emph{trying} to cite was $(86\times0.50-90)/176\approx-0.27$ against $+0.36$ for not citing. Seed 9 is only partly explained: fewer of its early citation attempts were invalid (23\% vs.\ 51\%), so citing was not a losing bet in its first block ($+0.29$ vs.\ $+0.26$), yet it too stopped citing. Seed 7 kept citing with a 36\% early failure rate. The $-1$ penalty thus makes citing risky without making its collapse inevitable. R1 starts with the same failure rate (91 evidence failures in its first block), but under VEGR a valid cited rollout earns about 3.4 against 1.3 uncited, and valid cited rollouts grow from 85 to 214 per block. (Rollout logs store no citation lists, so ``tried to cite'' counts evidence failures plus valid rollouts with a gold citation.)
+
+\textbf{Precise but incomplete.} VEGR improves citation precision but not completeness. R1's coverage (0.440) is no higher than B0's (0.472), and on the 136 shared questions it is 0.460 vs.\ 0.463. The policy prefers a few early sentences (93\% of R1 seed 8's 485 citations point to one of a paragraph's first three sentences), and under the summed reward one safe citation already earns full precision and partial coverage. R1 seed 9 has the best \pgem{} of the R1 runs (37.7\%) but cites only 1.03 sentences per episode and has Sup-EM 0.7\%, so \pgem{} must be read with Sup-EM and Joint-EM.
+
+\subsection{Training Dynamics}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_dynamics.pdf}
+\caption{Training diagnostics for every run, in blocks of 32 steps.}
+\label{fig:dynamics}
+\end{figure*}
+
+Fig.~\ref{fig:dynamics} follows four diagnostics through training for all 16 runs. Each run is a single epoch, so we report blocks of 32 steps ($8\times32=256$ rollouts each) instead of epochs. The rows do not depend on the reward scale, so R0 and the VEGR variants can be compared directly: the share of invalid rollouts, rollout EM with invalid rollouts counted as 0, mean citation precision of valid rollouts (0 for an uncited rollout), and the share of skipped steps.
+
+Three patterns hold across methods. First, every method learns the protocol at a similar pace: invalid rollouts fall from 24--52\% in the first block to at most 15\% in the last (R1 seed 7: 46\% to 7\% within five blocks), and rollout EM rises from 22--28\% to 40--61\% in the runs that start low (seeds 7 and 8). Second, citation precision separates the rewards. For R0 seeds 8 and 9 and for R0-dyn it falls from 0.55--0.71 in the first block to 0 by steps 97--128 and never recovers, while R0 seed 7 and every VEGR run stay between about 0.5 and 0.85 to the end. Third, R0's binary reward starves GRPO of signal: R0 skips 107, 128 and 124 of 256 steps, about 45--75\% per block once the policy stops failing, against 8--20 skipped steps in total for the evidence-rewarded runs, whose continuous terms almost always separate the 8 rollouts. R0-dyn skips 262 of its 512 questions.
+
+% EXTEND (8+ pages): restore the skipped-steps bar chart (fig4_1_skipped_steps.pdf) and the
+% per-seed EM figure (fig4_4_em_per_seed.pdf); add two traces from chapters-id Sec. 4.7.
+
+\subsection{RQ3: Reward and Optimizer Variants (Exploratory)}
+\textbf{R2} (gated penalties) looked better on seed 8 alone (48.7\% vs.\ 42.7\%), but this did not replicate (seed 9: 38.3\% vs.\ 45.3\%); over three seeds it is inconclusive. \textbf{R3} (coverage $\times$2) reaches the highest coverage (0.569) by citing more sentences, some of them wrong: \pgem{} drops by 8.0 points vs.\ R1 ($[-16.1,-0.2]$), yet R3 is best on Sup-EM (24.3\%) and Joint-EM (13.4\%, $+6.3$ $[+0.2,+13.1]$). Which reward wins depends on whether the metric punishes wrong citations or requires complete evidence, and both intervals sit close to zero. \textbf{R4} (no standard-deviation division) is indistinguishable from R1. \textbf{R0-dyn} reaches the highest EM of any run (48.7\%, $+8.0$ over R0 seed 8, question-only interval $[+3.3,+12.7]$) and completes all 300 episodes, but it made 250 updates from 512 questions versus 128 from 256, so the gain mixes dynamic sampling with twice the data. It still cites nothing and loses citations on the same schedule as R0 seed 8 (Fig.~\ref{fig:dynamics}).
+
+\section{Discussion}
+\label{sec:discussion}
+
+\textbf{Why results vary across seeds.} The seed fixes both the 256 training questions and the sampling noise, so seed differences mix the two; seed 9's sample, for instance, starts with fewer invalid rollouts under every reward (24--31\% vs.\ 37--50\%). Under R0 these differences decide the outcome. Fig.~\ref{fig:dynamics} shows the R0 seeds starting alike and splitting within the first 100 steps: with a binary reward and about half the steps skipped, a few early updates settle whether citing survives, and afterwards nothing pushes it back. R0's mean and s.d.\ (\pgem{} $8.2\pm14.2$) therefore summarize two distinct outcomes. Accuracy varies much less than grounding (EM s.d.\ 1.5--5.4 across methods), and VEGR's dense terms keep all three of its seeds in one regime.
+
+For R1 vs.\ R0 on \pgem{} we also compare seeds pairwise: every R1 seed (28.0--37.7\%) is above the best R0 seed (24.7\%), so all nine pairs are positive (smallest $+3.3$), and against the one R0 seed that keeps citing R1 still leads, 32.7\% vs.\ 24.7\%. How often R0 collapses is not estimated: 2 of 3 seeds gives a 95\% Clopper--Pearson interval of $[0.09, 0.99]$, and 0 of 3 for VEGR gives $[0, 0.71]$. With three seeds the seed-aware bootstrap has only 10 distinct seed combinations per method, so it can understate between-seed variance, and intervals near zero (the R3 rows) need caution. Single seeds would have misled in both directions: R2's seed-8 gain did not replicate, and R0 seed 7 alone would show no citation collapse. R0-dyn has a single seed, chosen because R0 collapsed on it, so its result cannot be separated from that seed or from its doubled data; it shows only that dynamic sampling did not prevent the collapse there.
+
+\textbf{What the results support.} GRPO-style training with LoRA on one GPU lifts a 7B closed-corpus search agent by about 20 EM points, mostly by teaching it a valid action protocol. Outcome-only reward and VEGR show no detectable accuracy difference, but VEGR's \pgem{} is 24.4 points higher, and outcome-only reward, which punishes invalid citations and never rewards valid ones, dropped citations on two of three seeds. This matches CaRR's outcome-only shortcuts~\cite{zhang2026carr} at a far smaller scale, here traced and detected by rule. The results do not show that VEGR is more \emph{accurate} or improves coverage, that a single term drives the gain, that R2 or R4 matter, or that dynamic sampling can never prevent the shortcut.
+
+\textbf{Limitations.} Three seeds and 300 holdout questions cannot resolve EM differences of a few points. VEGR is trained and evaluated against the same HotpotQA supporting facts, which are known to be incomplete, so part of the \pgem{} gain reflects the training target. The corpus is each question's own 10 paragraphs, far easier than open-web search, and each run is a single epoch of 256 questions with untuned reward weights. The environment accepts uncited answers and checks cited titles against the question's paragraphs rather than the search results, and a citation-separator issue affects at most 1.7 EM points per run. The prompt-only control uses a single worked example; other prompts may recover more of the protocol gain.
+
+\section{Conclusion}
+For a small RL-trained search agent, outcome-only reward is enough to improve accuracy but not grounding: under it a citation could only lower the reward, and two of three seeds stopped citing. A judge-free reward that checks sentence-level citations against gold supporting facts keeps accuracy about the same, keeps citations precise on every seed, and needs no extra model, though it does not make citations complete. Future work includes step-level credit for searches~\cite{xu2026stamp,wang2025stepsearch}, coverage-aware weighting, open-corpus retrieval, and datasets beyond HotpotQA. Code, configurations, split manifests and episode logs are available at \coderepo.
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

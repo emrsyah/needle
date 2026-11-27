@@ -70,6 +70,7 @@ class RolloutCollector:
         max_searches: int = 3,
         max_turns: int | None = None,
         reward_config: RewardConfig | None = None,
+        few_shot: bool = False,
     ) -> None:
         if not isinstance(top_k, int) or isinstance(top_k, bool) or top_k <= 0:
             raise ValueError("top_k must be a positive integer")
@@ -86,6 +87,7 @@ class RolloutCollector:
         self.max_searches = max_searches
         self.max_turns = max_turns
         self.reward_config = reward_config
+        self.few_shot = bool(few_shot)
 
     def _failure(
         self,
@@ -119,7 +121,7 @@ class RolloutCollector:
         max_turns = self.max_turns or self.max_searches + 1
 
         for turn in range(1, max_turns + 1):
-            prompt = build_prompt(environment)
+            prompt = build_prompt(environment, few_shot=self.few_shot)
             observation = _observation_text(environment)
             response: PolicyResponse | None = None
             try:

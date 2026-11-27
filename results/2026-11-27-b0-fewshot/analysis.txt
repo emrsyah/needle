@@ -1,0 +1,133 @@
+{
+  "source": "results/2026-11-27-b0-fewshot/episodes.jsonl",
+  "rows": 300,
+  "baselines": {
+    "b0_fewshot": {
+      "n": 300,
+      "completed": 223,
+      "failed": 77,
+      "completion_rate": 0.743333,
+      "failure_categories": {
+        "protocol": 54,
+        "budget": 3,
+        "transport": 0,
+        "retrieval": 0,
+        "answer": 0,
+        "evidence": 20
+      },
+      "failure_examples": {
+        "protocol": [
+          {
+            "question_id": "5a8b57f25542995d1e6f1371",
+            "error": "actions must not contain newlines"
+          },
+          {
+            "question_id": "5a7bbb64554299042af8f7cc",
+            "error": "actions must not contain newlines"
+          },
+          {
+            "question_id": "5a8db19d5542994ba4e3dd00",
+            "error": "actions must not contain newlines"
+          }
+        ],
+        "budget": [
+          {
+            "question_id": "5ac1c6805542994ab5c67e11",
+            "error": "search budget is exhausted"
+          },
+          {
+            "question_id": "5a7a230e5542996a35c170ee",
+            "error": "search budget is exhausted"
+          },
+          {
+            "question_id": "5adf3e355542993a75d26440",
+            "error": "search budget is exhausted"
+          }
+        ],
+        "transport": [],
+        "retrieval": [],
+        "answer": [],
+        "evidence": [
+          {
+            "question_id": "5a8c7595554299585d9e36b6",
+            "error": "citation references unknown document 'Shirley Temple Black'"
+          },
+          {
+            "question_id": "5a79311755429970f5fffe67",
+            "error": "citation references unknown document \"I's\""
+          },
+          {
+            "question_id": "5abbf698554299114383a0b5",
+            "error": "citation sentence index is out of range for 'English Electric Canberra'"
+          }
+        ]
+      },
+      "metrics": {
+        "answer_exact_match": {
+          "all_rows_failure_as_zero": 0.283333,
+          "completed_only": 0.381166
+        },
+        "answer_f1": {
+          "all_rows_failure_as_zero": 0.376097,
+          "completed_only": 0.50596
+        },
+        "evidence_coverage": {
+          "all_rows_failure_as_zero": 0.349167,
+          "completed_only": 0.469731
+        },
+        "citation_precision": {
+          "all_rows_failure_as_zero": 0.515556,
+          "completed_only": 0.693572
+        },
+        "retrieval_recall": {
+          "all_rows_failure_as_zero": 0.642222,
+          "completed_only": 0.863976
+        },
+        "search_cost": {
+          "all_rows_failure_as_zero": 0.487778,
+          "completed_only": 0.656203
+        },
+        "duplicate_query_penalty": {
+          "all_rows_failure_as_zero": 0.049444,
+          "completed_only": 0.066517
+        },
+        "total": {
+          "all_rows_failure_as_zero": 2.112652,
+          "completed_only": 2.842133
+        }
+      },
+      "reward_distribution_completed_only": {
+        "n": 223,
+        "mean": 2.842133,
+        "p0": -0.166667,
+        "p25": 1.933333,
+        "p50": 2.933333,
+        "p75": 3.95,
+        "p100": 4.966667
+      },
+      "information_gain_per_search_completed_only": {
+        "n": 439,
+        "mean": 0.438876,
+        "p0": 0.0,
+        "p25": 0.0,
+        "p50": 0.5,
+        "p75": 0.666667,
+        "p100": 1.0
+      },
+      "searches_completed_only": {
+        "n": 223,
+        "mean": 1.96861,
+        "p0": 1.0,
+        "p25": 1.5,
+        "p50": 2.0,
+        "p75": 2.0,
+        "p100": 3.0
+      },
+      "tokens": {
+        "rows_with_tokens": 300,
+        "total": 719055.0,
+        "mean_per_row": 2396.85
+      }
+    }
+  }
+}

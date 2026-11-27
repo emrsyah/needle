@@ -1,0 +1,22 @@
+{
+    "schema_version": 1,
+    "name": "b0_fewshot",
+    "description": "Prompt-only baseline (issue #9): the un-tuned model with one fictional two-hop worked example prepended to every prompt. Same holdout, decoding and environment as B0.",
+    "provider": "local",
+    "model": "Qwen/Qwen2.5-7B-Instruct",
+    "model_path": null,
+    "revision_status": "recorded_in_summary_json_metadata",
+    "prompt_serialization": "needle.inference.runner.build_prompt(few_shot=True)",
+    "few_shot_demonstration": "needle.inference.runner.FEW_SHOT_DEMONSTRATION",
+    "generation": {
+        "do_sample": false,
+        "temperature": 0.0,
+        "top_p": 1.0,
+        "max_new_tokens": 128,
+        "max_retries": 0
+    },
+    "offline": {"HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1", "local_files_only": true},
+    "shared_environment": "configs/evaluation/shared_environment.json",
+    "command": "bash scripts/run_fewshot_b0.sh",
+    "budget": {"max_usd": 2.5, "expected_gpu_hours": "0.5-1.0 on 1x L40S (~$1.10/h)"}
+}

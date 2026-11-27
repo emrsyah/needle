@@ -17,8 +17,39 @@ class EpisodeRunnerError(RuntimeError):
     """Raised when a model episode cannot produce a valid completed trajectory."""
 
 
-def build_prompt(environment: SearchEnvironment, feedback: str | None = None) -> str:
-    """Create the deterministic prompt from the question and search history."""
+FEW_SHOT_DEMONSTRATION = (
+    "Worked example (a different question; follow the same action format):",
+    "Question: Which country is the author of the novel 'The Silent Harbor' from?",
+    "Turn 1 action: SEARCH[The Silent Harbor novel author]",
+    "Search 1: The Silent Harbor novel author",
+    "[The Silent Harbor]",
+    "0: The Silent Harbor is a 1998 novel by Mara Lindqvist.",
+    "1: It won the Northern Book Prize in 1999.",
+    "[Northern Book Prize]",
+    "0: The Northern Book Prize is an annual literary award.",
+    "Turn 2 action: SEARCH[Mara Lindqvist nationality]",
+    "Search 2: Mara Lindqvist nationality",
+    "[Mara Lindqvist]",
+    "0: Mara Lindqvist (born 1961) is a writer.",
+    "1: She is a Swedish novelist and essayist.",
+    "Turn 3 action: ANSWER[Sweden] CITATIONS[The Silent Harbor|0; Mara Lindqvist|1]",
+    "End of worked example. Now act on the real question below.",
+)
+
+
+def build_prompt(
+    environment: SearchEnvironment,
+    feedback: str | None = None,
+    *,
+    few_shot: bool = False,
+) -> str:
+    """Create the deterministic prompt from the question and search history.
+
+    ``few_shot`` inserts one fictional two-hop demonstration (search, follow the
+    bridge entity, answer with one citation per gold sentence) before the real
+    question. It is used only by the prompt-only baseline (B0-FS); training and
+    all reported runs use ``few_shot=False``, so their prompts are unchanged.
+    """
     lines = [
         "You are a careful evidence-seeking QA agent.",
         "Return exactly one action: SEARCH[query] or ANSWER[answer] CITATIONS[title|index; ...].",
@@ -39,6 +70,7 @@ def build_prompt(environment: SearchEnvironment, feedback: str | None = None) ->
         ),
         "Never invent a document title; use CITATIONS[] when no citation can be validated.",
         "Use only the supplied search results for citations.",
+        *(FEW_SHOT_DEMONSTRATION if few_shot else ()),
         f"Question: {environment.example.question}",
         f"Remaining search budget: {environment.remaining_searches}",
         "Search results so far:",

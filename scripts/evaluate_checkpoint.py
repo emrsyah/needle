@@ -123,7 +123,9 @@ def evaluate(args: argparse.Namespace) -> None:
         generation=GenerationConfig(max_new_tokens=args.max_new_tokens, do_sample=False),
         model_name=args.name,
     )
-    collector = RolloutCollector(policy, top_k=args.top_k, max_searches=args.max_searches)
+    collector = RolloutCollector(
+        policy, top_k=args.top_k, max_searches=args.max_searches, few_shot=args.few_shot
+    )
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     rows = []
@@ -147,6 +149,7 @@ def evaluate(args: argparse.Namespace) -> None:
                 "max_new_tokens": args.max_new_tokens,
                 "do_sample": False,
                 "max_retries": 0,
+                "few_shot": args.few_shot,
             },
         ),
         "summary": {args.name: summarize(rows)},
@@ -175,6 +178,11 @@ def main() -> None:
     parser.add_argument("--max-searches", type=int, default=3)
     parser.add_argument("--max-new-tokens", type=int, default=128)
     parser.add_argument("--dtype", default="bfloat16")
+    parser.add_argument(
+        "--few-shot",
+        action="store_true",
+        help="prepend one fictional worked example to every prompt (prompt-only baseline B0-FS)",
+    )
     args = parser.parse_args()
     try:
         validate_local_model_path(args.model_path)

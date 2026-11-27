@@ -1,0 +1,731 @@
+{
+  "sources": {
+    "R0 s7": "results\\2026-10-10-batch\\r0_outcome_seed7\\metrics.jsonl",
+    "R0 s8": "results\\2026-10-10-batch\\r0_outcome_seed8\\metrics.jsonl",
+    "R1 s7": "results\\2026-10-10-grpo-run2\\metrics.jsonl",
+    "R1 s8": "results\\2026-10-10-batch\\r1_full_seed8\\metrics.jsonl",
+    "R2 s7": "results\\2026-10-10-batch\\r2_gated_seed7\\metrics.jsonl",
+    "R2 s8": "results\\2026-10-10-batch\\r2_gated_seed8\\metrics.jsonl",
+    "R0 s9": "results\\2026-10-11-fixes\\runs\\r0_outcome_seed9\\metrics.jsonl",
+    "R1 s9": "results\\2026-10-11-fixes\\runs\\r1_full_seed9\\metrics.jsonl",
+    "R2 s9": "results\\2026-10-11-fixes\\runs\\r2_gated_seed9\\metrics.jsonl",
+    "R3 s7": "results\\2026-10-11-fixes\\runs\\r3_coverage2_seed7\\metrics.jsonl",
+    "R3 s8": "results\\2026-10-11-fixes\\runs\\r3_coverage2_seed8\\metrics.jsonl",
+    "R3 s9": "results\\2026-10-11-fixes\\runs\\r3_coverage2_seed9\\metrics.jsonl",
+    "R4 s7": "results\\2026-10-11-fixes\\runs\\r4_drgrpo_seed7\\metrics.jsonl",
+    "R4 s8": "results\\2026-10-11-fixes\\runs\\r4_drgrpo_seed8\\metrics.jsonl",
+    "R4 s9": "results\\2026-10-11-fixes\\runs\\r4_drgrpo_seed9\\metrics.jsonl",
+    "R0-dyn s8": "results\\2026-10-11-fixes\\runs\\r0_dynsample_seed8\\metrics.jsonl"
+  },
+  "fig4_1_skipped_steps": {
+    "R0 s7": {
+      "skipped": 107,
+      "total": 256
+    },
+    "R0 s8": {
+      "skipped": 128,
+      "total": 256
+    },
+    "R1 s7": {
+      "skipped": 8,
+      "total": 256
+    },
+    "R1 s8": {
+      "skipped": 8,
+      "total": 256
+    },
+    "R2 s7": {
+      "skipped": 19,
+      "total": 256
+    },
+    "R2 s8": {
+      "skipped": 20,
+      "total": 256
+    },
+    "R0 s9": {
+      "skipped": 124,
+      "total": 256
+    },
+    "R1 s9": {
+      "skipped": 18,
+      "total": 256
+    },
+    "R2 s9": {
+      "skipped": 10,
+      "total": 256
+    },
+    "R3 s7": {
+      "skipped": 11,
+      "total": 256
+    },
+    "R3 s8": {
+      "skipped": 15,
+      "total": 256
+    },
+    "R3 s9": {
+      "skipped": 10,
+      "total": 256
+    },
+    "R4 s7": {
+      "skipped": 8,
+      "total": 256
+    },
+    "R4 s8": {
+      "skipped": 10,
+      "total": 256
+    },
+    "R4 s9": {
+      "skipped": 14,
+      "total": 256
+    },
+    "R0-dyn s8": {
+      "skipped": 262,
+      "total": 512
+    }
+  },
+  "fig4_2_citation_precision": {
+    "R0 s8": [
+      {
+        "steps": "1-32",
+        "mean_precision": 0.5677083333333333,
+        "n_valid_rollouts": 128
+      },
+      {
+        "steps": "33-64",
+        "mean_precision": 0.4990138067061143,
+        "n_valid_rollouts": 169
+      },
+      {
+        "steps": "65-96",
+        "mean_precision": 0.12605042016806722,
+        "n_valid_rollouts": 238
+      },
+      {
+        "steps": "97-128",
+        "mean_precision": 0.0,
+        "n_valid_rollouts": 256
+      },
+      {
+        "steps": "129-160",
+        "mean_precision": 0.0,
+        "n_valid_rollouts": 253
+      },
+      {
+        "steps": "161-192",
+        "mean_precision": 0.0,
+        "n_valid_rollouts": 255
+      },
+      {
+        "steps": "193-224",
+        "mean_precision": 0.0,
+        "n_valid_rollouts": 256
+      },
+      {
+        "steps": "225-256",
+        "mean_precision": 0.0,
+        "n_valid_rollouts": 256
+      }
+    ],
+    "R1 s8": [
+      {
+        "steps": "1-32",
+        "mean_precision": 0.55,
+        "n_valid_rollouts": 130
+      },
+      {
+        "steps": "33-64",
+        "mean_precision": 0.5203900709219857,
+        "n_valid_rollouts": 188
+      },
+      {
+        "steps": "65-96",
+        "mean_precision": 0.6540880503144655,
+        "n_valid_rollouts": 212
+      },
+      {
+        "steps": "97-128",
+        "mean_precision": 0.7521929824561403,
+        "n_valid_rollouts": 228
+      },
+      {
+        "steps": "129-160",
+        "mean_precision": 0.6198140200286122,
+        "n_valid_rollouts": 233
+      },
+      {
+        "steps": "161-192",
+        "mean_precision": 0.6475177304964539,
+        "n_valid_rollouts": 235
+      },
+      {
+        "steps": "193-224",
+        "mean_precision": 0.7266666666666667,
+        "n_valid_rollouts": 250
+      },
+      {
+        "steps": "225-256",
+        "mean_precision": 0.7608225108225107,
+        "n_valid_rollouts": 231
+      }
+    ]
+  },
+  "episode_sources": {
+    "B0": "results\\2026-10-10-grpo-smoke\\b0_episodes.jsonl",
+    "R0 s7": "results\\2026-10-10-batch\\r0_outcome_seed7\\episodes.jsonl",
+    "R0 s8": "results\\2026-10-10-batch\\r0_outcome_seed8\\episodes.jsonl",
+    "R1 s7": "results\\2026-10-10-grpo-run2\\grpo_run2_episodes.jsonl",
+    "R1 s8": "results\\2026-10-10-batch\\r1_full_seed8\\episodes.jsonl",
+    "R2 s7": "results\\2026-10-10-batch\\r2_gated_seed7\\episodes.jsonl",
+    "R2 s8": "results\\2026-10-10-batch\\r2_gated_seed8\\episodes.jsonl",
+    "R0 s9": "results\\2026-10-11-fixes\\results\\r0_outcome_seed9\\episodes.jsonl",
+    "R1 s9": "results\\2026-10-11-fixes\\results\\r1_full_seed9\\episodes.jsonl",
+    "R2 s9": "results\\2026-10-11-fixes\\results\\r2_gated_seed9\\episodes.jsonl",
+    "R3 s7": "results\\2026-10-11-fixes\\results\\r3_coverage2_seed7\\episodes.jsonl",
+    "R3 s8": "results\\2026-10-11-fixes\\results\\r3_coverage2_seed8\\episodes.jsonl",
+    "R3 s9": "results\\2026-10-11-fixes\\results\\r3_coverage2_seed9\\episodes.jsonl",
+    "R4 s7": "results\\2026-10-11-fixes\\results\\r4_drgrpo_seed7\\episodes.jsonl",
+    "R4 s8": "results\\2026-10-11-fixes\\results\\r4_drgrpo_seed8\\episodes.jsonl",
+    "R4 s9": "results\\2026-10-11-fixes\\results\\r4_drgrpo_seed9\\episodes.jsonl",
+    "R0-dyn s8": "results\\2026-10-11-fixes\\results\\r0_dynsample_seed8\\episodes.jsonl"
+  },
+  "fig4_3_to_4_7": {
+    "points": {
+      "B0": {
+        "em_all": 0.22333333333333333,
+        "grounded_em": 0.13,
+        "citation_precision": 0.6328431372549019,
+        "completed": 170
+      },
+      "R0 s7": {
+        "em_all": 0.42,
+        "grounded_em": 0.24666666666666667,
+        "citation_precision": 0.6205035971223021,
+        "completed": 278
+      },
+      "R0 s8": {
+        "em_all": 0.4066666666666667,
+        "grounded_em": 0.0,
+        "citation_precision": 0.0,
+        "completed": 299
+      },
+      "R1 s7": {
+        "em_all": 0.4266666666666667,
+        "grounded_em": 0.3233333333333333,
+        "citation_precision": 0.7505807200929153,
+        "completed": 287
+      },
+      "R1 s8": {
+        "em_all": 0.4266666666666667,
+        "grounded_em": 0.28,
+        "citation_precision": 0.7259001161440186,
+        "completed": 287
+      },
+      "R2 s7": {
+        "em_all": 0.41,
+        "grounded_em": 0.30666666666666664,
+        "citation_precision": 0.7482332155477032,
+        "completed": 283
+      },
+      "R2 s8": {
+        "em_all": 0.4866666666666667,
+        "grounded_em": 0.3233333333333333,
+        "citation_precision": 0.703448275862069,
+        "completed": 290
+      },
+      "R0 s9": {
+        "em_all": 0.45,
+        "grounded_em": 0.0,
+        "citation_precision": 0.0,
+        "completed": 298
+      },
+      "R1 s9": {
+        "em_all": 0.4533333333333333,
+        "grounded_em": 0.37666666666666665,
+        "citation_precision": 0.7542662116040956,
+        "completed": 293
+      },
+      "R2 s9": {
+        "em_all": 0.38333333333333336,
+        "grounded_em": 0.2633333333333333,
+        "citation_precision": 0.7022144522144522,
+        "completed": 286
+      },
+      "R3 s7": {
+        "em_all": 0.41333333333333333,
+        "grounded_em": 0.2633333333333333,
+        "citation_precision": 0.7005190311418685,
+        "completed": 289
+      },
+      "R3 s8": {
+        "em_all": 0.41,
+        "grounded_em": 0.18666666666666668,
+        "citation_precision": 0.6329225352112678,
+        "completed": 284
+      },
+      "R3 s9": {
+        "em_all": 0.44666666666666666,
+        "grounded_em": 0.29,
+        "citation_precision": 0.7377068557919622,
+        "completed": 282
+      },
+      "R4 s7": {
+        "em_all": 0.3933333333333333,
+        "grounded_em": 0.23666666666666666,
+        "citation_precision": 0.6361111111111111,
+        "completed": 288
+      },
+      "R4 s8": {
+        "em_all": 0.4633333333333333,
+        "grounded_em": 0.30333333333333334,
+        "citation_precision": 0.6928327645051197,
+        "completed": 293
+      },
+      "R4 s9": {
+        "em_all": 0.4633333333333333,
+        "grounded_em": 0.39,
+        "citation_precision": 0.7568493150684932,
+        "completed": 292
+      },
+      "R0-dyn s8": {
+        "em_all": 0.4866666666666667,
+        "grounded_em": 0.0,
+        "citation_precision": 0.0,
+        "completed": 300
+      }
+    },
+    "seed_points": {
+      "em_all": {
+        "R0": {
+          "R0 s7": 42.0,
+          "R0 s8": 40.666666666666664,
+          "R0 s9": 45.0
+        },
+        "R1": {
+          "R1 s7": 42.66666666666667,
+          "R1 s8": 42.66666666666667,
+          "R1 s9": 45.33333333333333
+        },
+        "R2": {
+          "R2 s7": 41.0,
+          "R2 s8": 48.66666666666667,
+          "R2 s9": 38.333333333333336
+        },
+        "R3": {
+          "R3 s7": 41.333333333333336,
+          "R3 s8": 41.0,
+          "R3 s9": 44.666666666666664
+        },
+        "R4": {
+          "R4 s7": 39.33333333333333,
+          "R4 s8": 46.33333333333333,
+          "R4 s9": 46.33333333333333
+        }
+      },
+      "grounded_em": {
+        "R0": {
+          "R0 s7": 24.666666666666668,
+          "R0 s8": 0.0,
+          "R0 s9": 0.0
+        },
+        "R1": {
+          "R1 s7": 32.33333333333333,
+          "R1 s8": 28.000000000000004,
+          "R1 s9": 37.666666666666664
+        },
+        "R2": {
+          "R2 s7": 30.666666666666664,
+          "R2 s8": 32.33333333333333,
+          "R2 s9": 26.333333333333332
+        },
+        "R3": {
+          "R3 s7": 26.333333333333332,
+          "R3 s8": 18.666666666666668,
+          "R3 s9": 28.999999999999996
+        },
+        "R4": {
+          "R4 s7": 23.666666666666668,
+          "R4 s8": 30.333333333333336,
+          "R4 s9": 39.0
+        }
+      }
+    },
+    "bootstrap": {
+      "note": "question-only: per-question scores averaged over seeds 7/8/9 per method; 10k resamples, RNG seed 0",
+      "em": {
+        "R0 \u2212 B0": {
+          "delta": 20.222222222222218,
+          "low": 15.888888888888886,
+          "high": 24.555555555555554,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R1 \u2212 B0": {
+          "delta": 21.22222222222222,
+          "low": 17.0,
+          "high": 25.444444444444443,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R2 \u2212 B0": {
+          "delta": 20.333333333333332,
+          "low": 16.11111111111111,
+          "high": 24.666666666666668,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R3 \u2212 B0": {
+          "delta": 20.0,
+          "low": 15.444444444444445,
+          "high": 24.555555555555554,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R4 \u2212 B0": {
+          "delta": 21.666666666666668,
+          "low": 17.333333333333336,
+          "high": 26.0,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R1 \u2212 R0": {
+          "delta": 1.0,
+          "low": -1.8888888888888886,
+          "high": 3.7777777777777777,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R2 \u2212 R1": {
+          "delta": -0.8888888888888891,
+          "low": -4.0,
+          "high": 2.111111111111111,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R3 \u2212 R1": {
+          "delta": -1.2222222222222223,
+          "low": -4.222222222222222,
+          "high": 1.7777777777777781,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R4 \u2212 R1": {
+          "delta": 0.44444444444444425,
+          "low": -2.555555555555556,
+          "high": 3.3333333333333335,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R0-dyn s8 \u2212 R0 s8": {
+          "delta": 8.0,
+          "low": 3.3333333333333335,
+          "high": 12.666666666666668,
+          "n": 300,
+          "resamples": 10000
+        }
+      },
+      "grounded_em": {
+        "R0 \u2212 B0": {
+          "delta": -4.777777777777779,
+          "low": -8.444444444444445,
+          "high": -1.2222222222222234,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R1 \u2212 B0": {
+          "delta": 19.666666666666664,
+          "low": 15.777777777777777,
+          "high": 23.666666666666668,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R2 \u2212 B0": {
+          "delta": 16.77777777777778,
+          "low": 12.999999999999998,
+          "high": 20.555555555555554,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R3 \u2212 B0": {
+          "delta": 11.666666666666666,
+          "low": 7.888888888888888,
+          "high": 15.555555555555554,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R4 \u2212 B0": {
+          "delta": 17.999999999999996,
+          "low": 14.11111111111111,
+          "high": 22.0,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R1 \u2212 R0": {
+          "delta": 24.444444444444443,
+          "low": 20.88888888888889,
+          "high": 28.111111111111107,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R2 \u2212 R1": {
+          "delta": -2.888888888888889,
+          "low": -5.8888888888888875,
+          "high": 0.11111111111111113,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R3 \u2212 R1": {
+          "delta": -8.0,
+          "low": -11.111111111111112,
+          "high": -4.886111111111151,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R4 \u2212 R1": {
+          "delta": -1.6666666666666667,
+          "low": -4.444444444444445,
+          "high": 1.0000000000000002,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R0-dyn s8 \u2212 R0 s8": {
+          "delta": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 300,
+          "resamples": 10000
+        }
+      }
+    },
+    "seed_bootstrap": {
+      "note": "seed-aware (plotted in Figure 4.5): seeds and questions resampled; 10k resamples, random.Random(0)",
+      "em": {
+        "R0 \u2212 B0": {
+          "delta": 20.222222222222225,
+          "low": 15.111111111111112,
+          "high": 25.555555555555564,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R1 \u2212 B0": {
+          "delta": 21.22222222222222,
+          "low": 16.44444444444445,
+          "high": 26.0,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R2 \u2212 B0": {
+          "delta": 20.333333333333336,
+          "low": 13.77777777777778,
+          "high": 27.44444444444444,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R3 \u2212 B0": {
+          "delta": 20.0,
+          "low": 14.777777777777782,
+          "high": 25.22222222222223,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R4 \u2212 B0": {
+          "delta": 21.666666666666668,
+          "low": 15.666666666666666,
+          "high": 27.55555555555556,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R1 \u2212 R0": {
+          "delta": 0.9999999999999953,
+          "low": -3.5555555555555545,
+          "high": 5.444444444444442,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R2 \u2212 R1": {
+          "delta": -0.8888888888888835,
+          "low": -7.11111111111111,
+          "high": 5.777777777777776,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R3 \u2212 R1": {
+          "delta": -1.222222222222219,
+          "low": -5.666666666666667,
+          "high": 3.3333333333333357,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R4 \u2212 R1": {
+          "delta": 0.4444444444444473,
+          "low": -5.222222222222221,
+          "high": 5.666666666666664,
+          "n": 300,
+          "resamples": 10000
+        }
+      },
+      "grounded_em": {
+        "R0 \u2212 B0": {
+          "delta": -4.777777777777778,
+          "low": -16.0,
+          "high": 10.666666666666666,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R1 \u2212 B0": {
+          "delta": 19.666666666666664,
+          "low": 13.333333333333336,
+          "high": 26.111111111111104,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R2 \u2212 B0": {
+          "delta": 16.777777777777775,
+          "low": 11.666666666666666,
+          "high": 21.888888888888886,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R3 \u2212 B0": {
+          "delta": 11.666666666666666,
+          "low": 5.0,
+          "high": 18.22222222222222,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R4 \u2212 B0": {
+          "delta": 18.0,
+          "low": 10.0,
+          "high": 26.666666666666668,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R1 \u2212 R0": {
+          "delta": 24.444444444444443,
+          "low": 8.777777777777777,
+          "high": 37.333333333333336,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R2 \u2212 R1": {
+          "delta": -2.888888888888891,
+          "low": -9.777777777777779,
+          "high": 3.555555555555558,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R3 \u2212 R1": {
+          "delta": -7.999999999999999,
+          "low": -16.111111111111104,
+          "high": -0.22222222222222351,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R4 \u2212 R1": {
+          "delta": -1.6666666666666663,
+          "low": -10.888888888888888,
+          "high": 7.66666666666667,
+          "n": 300,
+          "resamples": 10000
+        }
+      }
+    },
+    "failures": {
+      "B0": {
+        "evidence": 85,
+        "protocol": 37,
+        "budget": 8
+      },
+      "R0 s7": {
+        "evidence": 14,
+        "protocol": 7,
+        "budget": 1
+      },
+      "R0 s8": {
+        "evidence": 0,
+        "protocol": 1,
+        "budget": 0
+      },
+      "R0 s9": {
+        "evidence": 0,
+        "protocol": 2,
+        "budget": 0
+      },
+      "R1 s7": {
+        "evidence": 8,
+        "protocol": 5,
+        "budget": 0
+      },
+      "R1 s8": {
+        "evidence": 8,
+        "protocol": 5,
+        "budget": 0
+      },
+      "R1 s9": {
+        "evidence": 4,
+        "protocol": 3,
+        "budget": 0
+      },
+      "R2 s7": {
+        "evidence": 10,
+        "protocol": 7,
+        "budget": 0
+      },
+      "R2 s8": {
+        "evidence": 3,
+        "protocol": 7,
+        "budget": 0
+      },
+      "R2 s9": {
+        "evidence": 10,
+        "protocol": 4,
+        "budget": 0
+      },
+      "R3 s7": {
+        "evidence": 7,
+        "protocol": 4,
+        "budget": 0
+      },
+      "R3 s8": {
+        "evidence": 8,
+        "protocol": 8,
+        "budget": 0
+      },
+      "R3 s9": {
+        "evidence": 10,
+        "protocol": 4,
+        "budget": 4
+      },
+      "R4 s7": {
+        "evidence": 9,
+        "protocol": 3,
+        "budget": 0
+      },
+      "R4 s8": {
+        "evidence": 4,
+        "protocol": 3,
+        "budget": 0
+      },
+      "R4 s9": {
+        "evidence": 4,
+        "protocol": 3,
+        "budget": 1
+      },
+      "R0-dyn s8": {
+        "evidence": 0,
+        "protocol": 0,
+        "budget": 0
+      }
+    },
+    "cited_sentence_index_r1_s8": {
+      "0": 233,
+      "1": 161,
+      "2": 57,
+      "5": 4,
+      "4": 8,
+      "7": 1,
+      "3": 17,
+      "6": 3,
+      "10": 1
+    }
+  }
+}
