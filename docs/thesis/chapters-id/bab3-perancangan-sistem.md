@@ -6,7 +6,7 @@ Bab ini menjelaskan bagaimana agen pencarian dibangun, dilatih, dan dievaluasi. 
 
 Penelitian ini merupakan eksperimen terkontrol. Model, data, lingkungan, *hyperparameter*, dan protokol evaluasi dibuat tetap. Yang berubah antar-*run* hanyalah fungsi *reward* dan, pada dua varian, prosedur optimasi. Perbandingannya juga berpasangan: *run* dengan *seed* yang sama melatih 256 pertanyaan yang sama dengan urutan yang sama, apa pun *reward*-nya (Subbab 3.6). Kontrol ini memiliki dua batasan yang perlu dinyatakan sejak awal, yaitu sebagai berikut.
 
-1. Perbandingan utama, yaitu R1 (VEGR) dibandingkan dengan R0 (*outcome-only*), mengubah **seluruh paket *reward* sekaligus**: enam komponen ditambahkan (F1, cakupan, presisi, *retrieval recall*, biaya pencarian, dan penalti duplikasi). Rancangan ini tidak dapat menunjukkan komponen mana yang menyebabkan suatu perbedaan.
+1. Perbandingan utama, yaitu R1 (VEGR) dibandingkan dengan R0 (*outcome-only*), mengubah **seluruh paket *reward* sekaligus**: enam komponen ditambahkan (F1, cakupan, presisi, *retrieval recall*, penalti pencarian, dan penalti duplikasi). Rancangan ini tidak dapat menunjukkan komponen mana yang menyebabkan suatu perbedaan.
 2. *Reward* yang lebih padat juga mengubah jumlah langkah pelatihan yang menghasilkan pembaruan. R0 melewati sekitar separuh langkahnya sebagai grup dengan variansi nol (Subbab 3.6), sehingga *run* R0 melakukan 128–149 pembaruan, sedangkan *run* R1 melakukan sekitar 240 pembaruan (Tabel 4.1). Sebagian pembaruan R1 berasal dari grup yang *reward*-nya hanya berbeda sangat sedikit, misalnya 0,033 akibat satu pencarian tambahan, karena normalisasi dengan simpangan baku grup mengubah selisih sekecil apa pun menjadi *advantage* berskala satuan.
 
 Oleh karena itu, perbedaan antara R1 dan R0 diatribusikan kepada paket VEGR secara utuh, bersama dengan sinyal pelatihan yang dihasilkannya, dan bukan kepada satu komponen tertentu.
@@ -98,7 +98,7 @@ Kode juga mengenali dua jenis kegagalan lain, yaitu galat pencarian di luar habi
 Misalkan *G* adalah himpunan *supporting facts* emas (judul, indeks kalimat) dan *C* adalah himpunan kalimat yang disitasi oleh agen. Untuk episode yang valid:
 
 $$
-R_{\text{VEGR}} = \text{EM} + \text{F1} + \text{Cov} + \text{Prec} + \text{RetR} - 0.1\cdot\text{Cost} - 0.1\cdot\text{Dup}
+R_{\text{VEGR}} = \text{EM} + \text{F1} + \text{Cov} + \text{Prec} + \text{RetR} - 0.1\cdot\text{Srch} - 0.1\cdot\text{Dup}
 $$
 
 Tabel 3.1 mendefinisikan setiap komponen.
@@ -112,7 +112,7 @@ Tabel 3.1 mendefinisikan setiap komponen.
 | Cov (cakupan bukti) | \|G ∩ C\| / \|G\| | [0; 1] |
 | Prec (presisi sitasi) | \|G ∩ C\| / \|C\|, didefinisikan 0 jika C kosong | [0; 1] |
 | RetR (*retrieval recall*) | proporsi *supporting facts* emas yang paragrafnya muncul pada hasil pencarian mana pun | [0; 1] |
-| Cost (biaya pencarian) | jumlah pencarian yang digunakan / anggaran (3) | [0; 1] |
+| Srch (penalti pencarian) | jumlah pencarian yang digunakan / anggaran (3) | [0; 1] |
 | Dup (penalti *query* duplikat) | (jumlah *query* − jumlah *query* unik) / jumlah *query* | [0; 1) |
 
 Episode yang **tidak valid** menerima **R = −1**, terlepas dari komponen lainnya. Penalti inilah yang membuat VEGR menegakkan tata bahasa aksi. Karena judul yang dikarang termasuk kegagalan bukti, agen tidak dapat memperoleh presisi dengan menyitasi dokumen yang tidak ada di antara 10 paragraf pertanyaan. Sitasi ke paragraf milik pertanyaan yang belum diambil tetap dinilai seperti sitasi lainnya (Subbab 3.4). Karena RetR dihitung per *supporting fact*, paragraf emas yang memuat dua fakta berbobot dua kali lipat dibandingkan dengan paragraf emas yang memuat satu fakta.
@@ -121,7 +121,7 @@ Komponen-komponen tersebut terbagi ke dalam tiga kelompok, masing-masing ditujuk
 
 - **Komponen jawaban (EM, F1)** memberi *reward* atas kebenaran jawaban. Keduanya mengikuti metrik jawaban HotpotQA [6]. F1 memberikan nilai parsial, sehingga *reward* menjadi tidak sejarang EM saja.
 - **Komponen bukti (Cov, Prec)** memberi *reward* atas penyitasian kalimat yang tepat. Presisi saja dapat dipenuhi dengan menyitasi satu kalimat yang aman, dan cakupan saja dapat dipenuhi dengan menyitasi semua kalimat, sehingga keduanya disertakan, sejalan dengan pemisahan *citation recall* dan *citation precision* pada ALCE [14].
-- **Komponen pencarian (RetR, Cost, Dup)** memberi *reward* atas ditemukannya paragraf emas dan memberi penalti atas pencarian yang sia-sia atau berulang. Penalti tersebut diberi bobot kecil (0,1) agar dapat membentuk perilaku pencarian tanpa membuat agen enggan melakukan pencarian sama sekali.
+- **Komponen pencarian (RetR, Srch, Dup)** memberi *reward* atas ditemukannya paragraf emas dan memberi penalti atas pencarian yang sia-sia atau berulang. Penalti tersebut diberi bobot kecil (0,1) agar dapat membentuk perilaku pencarian tanpa membuat agen enggan melakukan pencarian sama sekali.
 
 **Asal rumus cakupan bukti dan presisi sitasi.** Kedua rumus komponen bukti mengikuti evaluasi *supporting facts* pada HotpotQA [6, Bagian 5.2]. HotpotQA menilai prediksi *supporting facts* sebagai himpunan kalimat yang dibandingkan dengan himpunan kalimat emas, lalu menghitung presisi P^(sup)^ dan *recall* R^(sup)^ per contoh. Kedua nilai tersebut digabung menjadi Sup-F1 dan, bersama metrik jawaban, menjadi Joint-F1. Pada VEGR, presisi sitasi sama dengan P^(sup)^, yaitu bagian dari kalimat yang disitasi yang merupakan kalimat emas. Cakupan bukti sama dengan R^(sup)^, yaitu bagian dari kalimat emas yang berhasil disitasi. Istilah "cakupan bukti" adalah penamaan dalam tugas akhir ini, karena HotpotQA menyebutnya *recall supporting facts*. Pemisahan yang sama, yaitu *recall* sitasi dibandingkan dengan presisi sitasi, juga digunakan oleh ALCE [14] untuk menilai teks bersitasi. Bedanya, ALCE menilai dukungan sitasi dengan model NLI, sedangkan VEGR mencocokkan sitasi secara langsung dengan kalimat emas.
 
@@ -130,7 +130,7 @@ Komponen-komponen tersebut terbagi ke dalam tiga kelompok, masing-masing ditujuk
 1. |G| = 3 kalimat emas, |C| = 3 kalimat yang disitasi, dan |G ∩ C| = 1 kalimat yang terdapat pada keduanya.
 2. Cakupan bukti = |G ∩ C| / |G| = 1/3 ≈ 0,333. Agen hanya menyebutkan satu dari tiga kalimat yang dibutuhkan.
 3. Presisi sitasi = |G ∩ C| / |C| = 1/3 ≈ 0,333. Dua dari tiga sitasinya bukan kalimat emas.
-4. Komponen lainnya: EM = 1, F1 = 1, RetR = 2/3 (paragraf untuk dua dari tiga kalimat emas terambil), Cost = 2/3 (dua pencarian), dan Dup = 0.
+4. Komponen lainnya: EM = 1, F1 = 1, RetR = 2/3 (paragraf untuk dua dari tiga kalimat emas terambil), Srch = 2/3 (dua pencarian), dan Dup = 0.
 5. R~VEGR~ = 1 + 1 + 0,333 + 0,333 + 0,667 − 0,1 · 0,667 − 0 ≈ **3,267**. Dengan bobot cakupan 2 (R3), cakupan dihitung dua kali sehingga R ≈ 3,600.
 
 Seandainya agen menyitasi ketiga kalimat emas dan tidak ada kalimat lain, cakupan dan presisi masing-masing bernilai 1 dan *reward*-nya naik sekitar 1,33 poin. Seandainya agen hanya menyitasi satu kalimat emas, presisi bernilai 1 tetapi cakupan tetap 1/3. Contoh terakhir ini menunjukkan mengapa presisi yang tinggi belum berarti bukti yang lengkap (Subbab 4.5).
@@ -149,7 +149,7 @@ Komponen-komponen VEGR secara individual bukanlah hal baru. Kontribusi penelitia
 | Cakupan bukti | 1 (kedua kalimat emas disitasi) | 0 (tidak ada yang disitasi) |
 | Presisi sitasi | 1 | 0 |
 | *Retrieval recall* | 1 (paragraf kedua fakta emas diambil) | 0,5 (paragraf satu dari dua fakta emas) |
-| − 0,1 · biaya pencarian | − 0,1 · 2/3 = − 0,067 | − 0,1 · 1/3 = − 0,033 |
+| − 0,1 · penalti pencarian | − 0,1 · 2/3 = − 0,067 | − 0,1 · 1/3 = − 0,033 |
 | − 0,1 · penalti duplikasi | 0 | 0 |
 | **Total VEGR** | **4,933** | **2,467** |
 | *Reward outcome-only* (R0) | 1 | 1 |
@@ -157,16 +157,12 @@ Komponen-komponen VEGR secara individual bukanlah hal baru. Kontribusi penelitia
 **Pembanding dan varian *reward*.** R0 adalah *reward* dasar yang berbeda dari VEGR pada enam komponen sekaligus (Subbab 3.1), sedangkan R2 dan R3 masing-masing mengubah satu aspek VEGR, yaitu sebagai berikut.
 
 - **R0, *outcome-only* (*reward* dasar).** R = EM. Seluruh bobot lainnya bernilai 0, tetapi episode yang tidak valid tetap menerima −1. R0 mengambil gagasan *reward* berbasis EM dari Search-R1 [2], tetapi bukan replikasinya: Search-R1 tidak memakai *reward* format dan hanya mengembalikan pesan agar model "berpikir ulang" ketika aksinya tidak valid, sedangkan R0 memberi −1 pada setiap episode yang tidak valid, termasuk kegagalan bukti.
-- **R2, penalti bersyarat (*gated*).** Varian ini sama dengan VEGR, kecuali bahwa penalti biaya pencarian dan duplikasi hanya diterapkan ketika EM = 1. Tujuannya adalah agar pencarian tidak diberi penalti pada pertanyaan yang belum berhasil dijawab oleh agen.
+- **R2, penalti bersyarat (*gated*).** Varian ini sama dengan VEGR, kecuali bahwa penalti pencarian dan penalti duplikasi hanya diterapkan ketika EM = 1. Tujuannya adalah agar pencarian tidak diberi penalti pada pertanyaan yang belum berhasil dijawab oleh agen.
 - **R3, cakupan ×2.** Varian ini adalah VEGR dengan bobot cakupan bukti dinaikkan dari 1 menjadi 2. Varian ini menyasar pola sitasi "presisi tetapi tidak lengkap" yang dijelaskan pada Bab 4.
 
 **Apa yang diberi *reward* oleh R0 terkait sitasi.** Pada R0, episode yang valid memperoleh nilai EM-nya (0 atau 1), baik dengan maupun tanpa sitasi. Sitasi tidak pernah dapat menambah *reward*, tetapi sitasi yang gagal validasi membuat episode tersebut menjadi kegagalan bukti yang bernilai −1. Dengan demikian, berdasarkan definisinya, **R0 menghukum sitasi yang tidak valid tetapi tidak pernah memberi imbalan atas sitasi yang benar**. Model dasar sering menghasilkan sitasi yang tidak valid: 85 dari 130 kegagalan *holdout* B0 merupakan kegagalan bukti (Subbab 4.2).
 
-Dari definisi ini, hipotesis penelitian ini adalah bahwa R0 dapat mendorong *policy* untuk berhenti menyitasi. Log *rollout* pelatihan memungkinkan hipotesis ini diperiksa sebagian. Log tersebut tidak menyimpan daftar sitasi, sehingga *rollout* valid hanya dapat dibagi menjadi dua kelompok, yaitu **valid dengan ≥1 sitasi emas** (presisi sitasi > 0) dan **valid tanpa sitasi emas**, yang mencakup *rollout* tanpa sitasi sama sekali maupun *rollout* yang hanya menyitasi kalimat bukan emas. Sebuah "upaya menyitasi" dihitung sebagai kegagalan bukti ditambah *rollout* valid dengan ≥1 sitasi emas. Pada 32 langkah pertama R0 *seed* 8 (8 × 32 = 256 *rollout* pelatihan), 176 *rollout* merupakan upaya menyitasi. Sebanyak 90 di antaranya (51%) merupakan kegagalan bukti (−1), dan 86 *rollout* valid dengan ≥1 sitasi emas memperoleh rata-rata 0,50. Sebanyak 42 *rollout* valid tanpa sitasi emas memperoleh rata-rata 0,36. Rata-rata *reward* sebuah upaya menyitasi karena itu adalah (86 × 0,50 − 90) / 176 ≈ **−0,27**, dibandingkan dengan **+0,36** untuk kelompok tanpa sitasi emas. Pada *seed* ini, data konsisten dengan hipotesis tersebut.
-
-Statistik yang sama tidak membedakan *run* yang kehilangan sitasi dari yang tidak. Pada blok pertama R0 *seed* 9, yang juga kehilangan sitasi, hanya 23% upaya menyitasi yang tidak valid, dan rata-rata *reward* sebuah upaya (+0,29) sedikit lebih tinggi daripada kelompok tanpa sitasi emas (0,26). Pada R0 *seed* 7, yang tetap menyitasi, 36% upaya tidak valid dan rata-ratanya (−0,05) lebih rendah daripada kelompok tanpa sitasi emas (0,30). Dengan demikian, penalti −1 menjelaskan mengapa hilangnya sitasi *mungkin* terjadi pada R0, tetapi tidak menjelaskan mengapa hal itu terjadi pada *seed* 8 dan 9 dan tidak pada *seed* 7.
-
-Perbedaan yang lebih mendasar terletak pada selisih *reward* di dalam grup. Pada R0, *rollout* valid dengan ≥1 sitasi emas hanya memperoleh sedikit lebih banyak daripada *rollout* valid tanpa sitasi emas (selisih rata-rata 0,1–0,4 pada blok-blok awal), dan selisih ini berasal dari jawaban yang lebih sering benar, bukan dari sitasinya. VEGR memberi *reward* secara langsung atas sitasi yang benar melalui komponen cakupan dan presisinya. Pada blok pertama R1 *seed* 8, *rollout* valid dengan ≥1 sitasi emas memperoleh rata-rata 3,35 dan *rollout* valid tanpa sitasi emas 1,37, yaitu selisih sekitar 2 poin *reward*. Subbab 4.5 menyajikan data per blok untuk *run*-*run* tersebut.
+Dari definisi ini, hipotesis penelitian ini adalah bahwa R0 dapat mendorong *policy* untuk berhenti menyitasi, sedangkan VEGR memberi *reward* secara langsung atas sitasi yang benar melalui komponen cakupan dan presisinya. Subbab 4.5 memeriksa hipotesis ini dengan log *rollout* pelatihan.
 
 ## 3.6 Algoritma Pelatihan GRPO
 

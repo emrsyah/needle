@@ -35,6 +35,7 @@ ORDER = [
     "daftar-pustaka",
     "lampiran-a-prompt",
     "lampiran-b-dinamika-pelatihan",
+    "lampiran-c-posisi-sitasi",
 ]
 
 LOGO = HERE / "figures" / "telkom_logo.png"

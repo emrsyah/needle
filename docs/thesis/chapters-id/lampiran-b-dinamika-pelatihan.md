@@ -1,6 +1,6 @@
 # LAMPIRAN B DINAMIKA PELATIHAN SELURUH *RUN*
 
-Lampiran ini melengkapi Gambar 4.4, yang hanya menampilkan R0 dan R1. Setiap *run* melewati data pelatihannya satu kali (satu *epoch*), sehingga perkembangan pelatihan dilaporkan per blok 32 langkah. Blok B1 berisi langkah 1–32, B2 berisi langkah 33–64, dan seterusnya hingga B8 (langkah 225–256). R0-dyn memiliki 512 langkah, sehingga blok B9–B16 (langkah 257–512) ditampilkan pada baris tersendiri. Satu blok berisi 32 pertanyaan dengan 8 *rollout* per pertanyaan, yaitu 256 *rollout*.
+Lampiran ini melengkapi Gambar 4.3, yang hanya menampilkan R0 dan R1. Setiap *run* melewati data pelatihannya satu kali (satu *epoch*), sehingga perkembangan pelatihan dilaporkan per blok 32 langkah. Blok B1 berisi langkah 1–32, B2 berisi langkah 33–64, dan seterusnya hingga B8 (langkah 225–256). R0-dyn memiliki 512 langkah, sehingga blok B9–B16 (langkah 257–512) ditampilkan pada baris tersendiri. Satu blok berisi 32 pertanyaan dengan 8 *rollout* per pertanyaan, yaitu 256 *rollout*.
 
 Seluruh nilai dihitung dari log metrik pelatihan setiap *run* oleh skrip `scripts/make_training_dynamics.py`. Nilai yang sama juga tersedia dalam bentuk data di folder `results/2026-11-27-training-dynamics/`.
 
@@ -14,7 +14,7 @@ Gambar B.1 menampilkan rata-rata presisi sitasi *rollout* pelatihan yang valid p
 
 Pada R2, R3, dan R4, presisi sitasi pelatihan berada antara 0,52 dan 0,85 pada setiap blok dan setiap *seed*, serupa dengan R1. Tidak ada *run* VEGR maupun variannya yang kehilangan sitasi. R0-dyn mengikuti jalur yang sama dengan R0 *seed* 8 dan R0 *seed* 9: presisinya turun ke 0,25 pada blok B3 dan tetap 0 pada setiap blok setelahnya, termasuk selama 256 langkah tambahan.
 
-Tabel B.1 memuat nilai yang digambarkan pada Gambar 4.4 dan Gambar B.1 untuk seluruh 16 *run*. *Rollout* valid tanpa sitasi memiliki presisi 0 menurut definisi (Subbab 3.5).
+Tabel B.1 memuat nilai yang digambarkan pada Gambar 4.3 dan Gambar B.1 untuk seluruh 16 *run*. *Rollout* valid tanpa sitasi memiliki presisi 0 menurut definisi (Subbab 3.5).
 
 **Tabel B.1.** Presisi sitasi rata-rata per blok
 

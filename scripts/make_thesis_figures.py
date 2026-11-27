@@ -186,7 +186,7 @@ def system_diagram() -> None:
         21,
         18,
         "Reward VEGR",
-        "EM + F1 + cakupan\n+ presisi + recall\n− 0,1·biaya − 0,1·dup\ntidak valid → −1",
+        "EM + F1 + cakupan\n+ presisi + recall\n− 0,1·srch − 0,1·dup\ntidak valid → −1",
         "#DDF1E8",
     )
     box(
