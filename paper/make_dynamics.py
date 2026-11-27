@@ -95,9 +95,9 @@ def blocks(rows: list[dict]) -> list[dict]:
 
 ROWS = [
     ("invalid", "Invalid\nrollouts (%)", (0, 60)),
-    ("em", "Rollout\nEM (%)", (0, 60)),
+    ("em", "Rollout\nEM (%)", (0, 75)),
     ("precision", "Citation\nprecision", (0, 1)),
-    ("skipped", "Skipped\nsteps (%)", (0, 70)),
+    ("skipped", "Skipped\nsteps (%)", (0, 80)),
 ]
 
 

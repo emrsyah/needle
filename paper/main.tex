@@ -15,7 +15,7 @@
 \usepackage{xcolor}
 \usepackage{booktabs}
 \usepackage{url}
-\usepackage[hidelinks]{hyperref}
+\usepackage[hidelinks,bookmarks=false]{hyperref}  % no PDF outline (IEEE PDF eXpress)
 \graphicspath{{figures/}}
 
 \input{fewshot.tex}
@@ -185,7 +185,7 @@ The un-tuned model reaches 22.3\% EM, mainly because only 170 of 300 episodes co
 \label{fig:emprec}
 \end{figure}
 
-Fig.~\ref{fig:emprec} plots each run's EM (failures count as 0) against its citation precision on completed episodes: all trained runs share one accuracy band, and only the runs whose reward includes evidence terms keep citing.
+Fig.~\ref{fig:emprec} plots each run's EM (failures count as 0) against its citation precision on completed episodes: all trained runs share one accuracy band; every run whose reward includes evidence terms keeps citing, while two R0 seeds and R0-dyn sit at zero precision.
 
 \textbf{Why R0 stops citing.} The training rollouts explain seed 8. In its first 32 steps, 176 rollouts tried to cite: 90 were evidence failures ($-1$) and 86 were valid with mean reward 0.50, while 42 uncited valid rollouts averaged 0.36. A valid citation was worth slightly more, but the expected reward of \emph{trying} to cite was $(86\times0.50-90)/176\approx-0.27$ against $+0.36$ for not citing. Seed 9 is only partly explained: fewer of its early citation attempts were invalid (23\% vs.\ 51\%), so citing was not a losing bet in its first block ($+0.29$ vs.\ $+0.26$), yet it too stopped citing. Seed 7 kept citing with a 36\% early failure rate. The $-1$ penalty thus makes citing risky without making its collapse inevitable. R1 starts with the same failure rate (91 evidence failures in its first block), but under VEGR a valid cited rollout earns about 3.4 against 1.3 uncited, and valid cited rollouts grow from 85 to 214 per block. (Rollout logs store no citation lists, so ``tried to cite'' counts evidence failures plus valid rollouts with a gold citation.)
 
@@ -202,7 +202,7 @@ Fig.~\ref{fig:emprec} plots each run's EM (failures count as 0) against its cita
 
 Fig.~\ref{fig:dynamics} follows four diagnostics through training for all 16 runs. Each run is a single epoch, so we report blocks of 32 steps ($8\times32=256$ rollouts each) instead of epochs. The rows do not depend on the reward scale, so R0 and the VEGR variants can be compared directly: the share of invalid rollouts, rollout EM with invalid rollouts counted as 0, mean citation precision of valid rollouts (0 for an uncited rollout), and the share of skipped steps.
 
-Three patterns hold across methods. First, every method learns the protocol at a similar pace: invalid rollouts fall from 24--50\% in the first block to at most 15\% in the last (R1 seed 7: 46\% to 7\% within five blocks), and rollout EM rises in every run. This is the training-time view of RQ1 and of the equal accuracy in RQ2. Second, citation precision separates the rewards. For R0 seeds 8 and 9 and for R0-dyn it falls from 0.55--0.71 in the first block to 0 by steps 97--128 and never recovers, while R0 seed 7 and every VEGR run stay between about 0.5 and 0.85 to the end. Third, R0's binary reward starves GRPO of signal: R0 skips 107, 128 and 124 of 256 steps, about 45--70\% per block once the policy stops failing, against 8--20 skipped steps in total for the evidence-rewarded runs, whose continuous terms almost always separate the 8 rollouts. R0-dyn skips 262 of its 512 questions.
+Three patterns hold across methods. First, every method learns the protocol at a similar pace: invalid rollouts fall from 24--52\% in the first block to at most 15\% in the last (R1 seed 7: 46\% to 7\% within five blocks), and rollout EM rises from 22--28\% to 40--61\% in the runs that start low (seeds 7 and 8). This is the training-time view of RQ1 and of the similar accuracy in RQ2. Second, citation precision separates the rewards. For R0 seeds 8 and 9 and for R0-dyn it falls from 0.55--0.71 in the first block to 0 by steps 97--128 and never recovers, while R0 seed 7 and every VEGR run stay between about 0.5 and 0.85 to the end. Third, R0's binary reward starves GRPO of signal: R0 skips 107, 128 and 124 of 256 steps, about 45--75\% per block once the policy stops failing, against 8--20 skipped steps in total for the evidence-rewarded runs, whose continuous terms almost always separate the 8 rollouts. R0-dyn skips 262 of its 512 questions.
 
 % EXTEND (8+ pages): restore the skipped-steps bar chart (fig4_1_skipped_steps.pdf) and the
 % per-seed EM figure (fig4_4_em_per_seed.pdf); add two traces from chapters-id Sec. 4.7.
