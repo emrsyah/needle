@@ -1,0 +1,489 @@
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:00<00:00, 73.67it/s]
+1/20 failed
+2/20 failed
+3/20 completed
+4/20 completed
+5/20 completed
+6/20 completed
+7/20 completed
+8/20 completed
+9/20 failed
+10/20 failed
+11/20 failed
+12/20 completed
+13/20 completed
+14/20 completed
+15/20 completed
+16/20 completed
+17/20 completed
+18/20 failed
+19/20 completed
+20/20 failed
+{
+  "b0_fewshot": {
+    "n": 20,
+    "completed": 13,
+    "failed": 7,
+    "answer_exact_match_all_rows_fail_as_zero": 0.25,
+    "answer_exact_match_completed_only": 0.3846,
+    "answer_f1_completed_only": 0.4695,
+    "evidence_coverage_completed_only": 0.5179,
+    "citation_precision_completed_only": 0.6923,
+    "retrieval_recall_completed_only": 0.8846,
+    "total_completed_only": 2.8771,
+    "mean_searches_completed_only": 2.0769
+  }
+}
+speed check: ~4s/question, full run ~0.33 h
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:00<00:00, 85.80it/s]
+1/300 failed
+2/300 failed
+3/300 completed
+4/300 completed
+5/300 completed
+6/300 completed
+7/300 completed
+8/300 completed
+9/300 failed
+10/300 failed
+11/300 failed
+12/300 completed
+13/300 completed
+14/300 completed
+15/300 completed
+16/300 completed
+17/300 completed
+18/300 failed
+19/300 completed
+20/300 failed
+21/300 completed
+22/300 completed
+23/300 completed
+24/300 failed
+25/300 completed
+26/300 completed
+27/300 completed
+28/300 failed
+29/300 completed
+30/300 completed
+31/300 completed
+32/300 completed
+33/300 completed
+34/300 failed
+35/300 failed
+36/300 completed
+37/300 completed
+38/300 completed
+39/300 failed
+40/300 completed
+41/300 completed
+42/300 completed
+43/300 failed
+44/300 completed
+45/300 completed
+46/300 completed
+47/300 completed
+48/300 completed
+49/300 completed
+50/300 failed
+51/300 completed
+52/300 completed
+53/300 failed
+54/300 completed
+55/300 completed
+56/300 completed
+57/300 completed
+58/300 completed
+59/300 completed
+60/300 failed
+61/300 completed
+62/300 failed
+63/300 completed
+64/300 completed
+65/300 completed
+66/300 failed
+67/300 completed
+68/300 completed
+69/300 completed
+70/300 completed
+71/300 completed
+72/300 completed
+73/300 completed
+74/300 completed
+75/300 completed
+76/300 completed
+77/300 failed
+78/300 failed
+79/300 completed
+80/300 completed
+81/300 failed
+82/300 failed
+83/300 completed
+84/300 failed
+85/300 completed
+86/300 completed
+87/300 failed
+88/300 completed
+89/300 failed
+90/300 completed
+91/300 completed
+92/300 completed
+93/300 failed
+94/300 completed
+95/300 completed
+96/300 completed
+97/300 completed
+98/300 completed
+99/300 completed
+100/300 completed
+101/300 completed
+102/300 failed
+103/300 completed
+104/300 failed
+105/300 completed
+106/300 completed
+107/300 completed
+108/300 completed
+109/300 failed
+110/300 completed
+111/300 failed
+112/300 completed
+113/300 failed
+114/300 completed
+115/300 completed
+116/300 completed
+117/300 completed
+118/300 failed
+119/300 failed
+120/300 completed
+121/300 completed
+122/300 completed
+123/300 completed
+124/300 completed
+125/300 completed
+126/300 completed
+127/300 completed
+128/300 completed
+129/300 completed
+130/300 failed
+131/300 completed
+132/300 completed
+133/300 completed
+134/300 completed
+135/300 failed
+136/300 completed
+137/300 completed
+138/300 failed
+139/300 failed
+140/300 completed
+141/300 failed
+142/300 completed
+143/300 completed
+144/300 completed
+145/300 failed
+146/300 failed
+147/300 completed
+148/300 failed
+149/300 completed
+150/300 completed
+151/300 failed
+152/300 completed
+153/300 completed
+154/300 failed
+155/300 failed
+156/300 failed
+157/300 completed
+158/300 completed
+159/300 completed
+160/300 completed
+161/300 failed
+162/300 failed
+163/300 completed
+164/300 completed
+165/300 completed
+166/300 completed
+167/300 failed
+168/300 completed
+169/300 completed
+170/300 completed
+171/300 completed
+172/300 completed
+173/300 failed
+174/300 completed
+175/300 completed
+176/300 completed
+177/300 failed
+178/300 failed
+179/300 completed
+180/300 completed
+181/300 completed
+182/300 completed
+183/300 completed
+184/300 failed
+185/300 completed
+186/300 completed
+187/300 completed
+188/300 failed
+189/300 completed
+190/300 completed
+191/300 completed
+192/300 completed
+193/300 completed
+194/300 completed
+195/300 completed
+196/300 completed
+197/300 completed
+198/300 completed
+199/300 completed
+200/300 completed
+201/300 completed
+202/300 completed
+203/300 completed
+204/300 completed
+205/300 completed
+206/300 failed
+207/300 completed
+208/300 failed
+209/300 completed
+210/300 failed
+211/300 completed
+212/300 failed
+213/300 completed
+214/300 failed
+215/300 completed
+216/300 completed
+217/300 failed
+218/300 completed
+219/300 completed
+220/300 completed
+221/300 failed
+222/300 failed
+223/300 completed
+224/300 completed
+225/300 completed
+226/300 completed
+227/300 failed
+228/300 completed
+229/300 failed
+230/300 completed
+231/300 completed
+232/300 failed
+233/300 failed
+234/300 completed
+235/300 failed
+236/300 completed
+237/300 completed
+238/300 completed
+239/300 failed
+240/300 completed
+241/300 completed
+242/300 completed
+243/300 completed
+244/300 completed
+245/300 completed
+246/300 completed
+247/300 completed
+248/300 failed
+249/300 failed
+250/300 completed
+251/300 completed
+252/300 completed
+253/300 failed
+254/300 completed
+255/300 completed
+256/300 completed
+257/300 completed
+258/300 completed
+259/300 completed
+260/300 completed
+261/300 completed
+262/300 completed
+263/300 completed
+264/300 completed
+265/300 completed
+266/300 completed
+267/300 completed
+268/300 completed
+269/300 completed
+270/300 failed
+271/300 completed
+272/300 completed
+273/300 completed
+274/300 completed
+275/300 completed
+276/300 failed
+277/300 failed
+278/300 failed
+279/300 completed
+280/300 completed
+281/300 completed
+282/300 completed
+283/300 failed
+284/300 completed
+285/300 failed
+286/300 completed
+287/300 completed
+288/300 completed
+289/300 completed
+290/300 completed
+291/300 completed
+292/300 completed
+293/300 completed
+294/300 completed
+295/300 completed
+296/300 completed
+297/300 completed
+298/300 failed
+299/300 completed
+300/300 completed
+{
+  "b0_fewshot": {
+    "n": 300,
+    "completed": 223,
+    "failed": 77,
+    "answer_exact_match_all_rows_fail_as_zero": 0.2833,
+    "answer_exact_match_completed_only": 0.3812,
+    "answer_f1_completed_only": 0.506,
+    "evidence_coverage_completed_only": 0.4697,
+    "citation_precision_completed_only": 0.6936,
+    "retrieval_recall_completed_only": 0.864,
+    "total_completed_only": 2.8421,
+    "mean_searches_completed_only": 1.9686
+  }
+}
+{
+  "source": "results/2026-11-27-b0-fewshot/episodes.jsonl",
+  "rows": 300,
+  "baselines": {
+    "b0_fewshot": {
+      "n": 300,
+      "completed": 223,
+      "failed": 77,
+      "completion_rate": 0.743333,
+      "failure_categories": {
+        "protocol": 54,
+        "budget": 3,
+        "transport": 0,
+        "retrieval": 0,
+        "answer": 0,
+        "evidence": 20
+      },
+      "failure_examples": {
+        "protocol": [
+          {
+            "question_id": "5a8b57f25542995d1e6f1371",
+            "error": "actions must not contain newlines"
+          },
+          {
+            "question_id": "5a7bbb64554299042af8f7cc",
+            "error": "actions must not contain newlines"
+          },
+          {
+            "question_id": "5a8db19d5542994ba4e3dd00",
+            "error": "actions must not contain newlines"
+          }
+        ],
+        "budget": [
+          {
+            "question_id": "5ac1c6805542994ab5c67e11",
+            "error": "search budget is exhausted"
+          },
+          {
+            "question_id": "5a7a230e5542996a35c170ee",
+            "error": "search budget is exhausted"
+          },
+          {
+            "question_id": "5adf3e355542993a75d26440",
+            "error": "search budget is exhausted"
+          }
+        ],
+        "transport": [],
+        "retrieval": [],
+        "answer": [],
+        "evidence": [
+          {
+            "question_id": "5a8c7595554299585d9e36b6",
+            "error": "citation references unknown document 'Shirley Temple Black'"
+          },
+          {
+            "question_id": "5a79311755429970f5fffe67",
+            "error": "citation references unknown document \"I's\""
+          },
+          {
+            "question_id": "5abbf698554299114383a0b5",
+            "error": "citation sentence index is out of range for 'English Electric Canberra'"
+          }
+        ]
+      },
+      "metrics": {
+        "answer_exact_match": {
+          "all_rows_failure_as_zero": 0.283333,
+          "completed_only": 0.381166
+        },
+        "answer_f1": {
+          "all_rows_failure_as_zero": 0.376097,
+          "completed_only": 0.50596
+        },
+        "evidence_coverage": {
+          "all_rows_failure_as_zero": 0.349167,
+          "completed_only": 0.469731
+        },
+        "citation_precision": {
+          "all_rows_failure_as_zero": 0.515556,
+          "completed_only": 0.693572
+        },
+        "retrieval_recall": {
+          "all_rows_failure_as_zero": 0.642222,
+          "completed_only": 0.863976
+        },
+        "search_cost": {
+          "all_rows_failure_as_zero": 0.487778,
+          "completed_only": 0.656203
+        },
+        "duplicate_query_penalty": {
+          "all_rows_failure_as_zero": 0.049444,
+          "completed_only": 0.066517
+        },
+        "total": {
+          "all_rows_failure_as_zero": 2.112652,
+          "completed_only": 2.842133
+        }
+      },
+      "reward_distribution_completed_only": {
+        "n": 223,
+        "mean": 2.842133,
+        "p0": -0.166667,
+        "p25": 1.933333,
+        "p50": 2.933333,
+        "p75": 3.95,
+        "p100": 4.966667
+      },
+      "information_gain_per_search_completed_only": {
+        "n": 439,
+        "mean": 0.438876,
+        "p0": 0.0,
+        "p25": 0.0,
+        "p50": 0.5,
+        "p75": 0.666667,
+        "p100": 1.0
+      },
+      "searches_completed_only": {
+        "n": 223,
+        "mean": 1.96861,
+        "p0": 1.0,
+        "p25": 1.5,
+        "p50": 2.0,
+        "p75": 2.0,
+        "p100": 3.0
+      },
+      "tokens": {
+        "rows_with_tokens": 300,
+        "total": 719055.0,
+        "mean_per_row": 2396.85
+      }
+    }
+  }
+}
+done: results/2026-11-27-b0-fewshot/summary.json -- download results/2026-11-27-b0-fewshot/ and STOP THE POD
+EXIT=0
+2026-11-27T13:44:13Z
