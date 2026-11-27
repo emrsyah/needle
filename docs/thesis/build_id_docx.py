@@ -23,7 +23,7 @@ HERE = Path(__file__).resolve().parent
 SOURCE = HERE / "chapters-id"
 OUT_DIR = HERE / "output"
 BODY_STYLES = ("normal", "body text", "first paragraph", "compact", "bibliography")
-DEFAULT_REFERENCE =Path.home() / "Downloads" / "Proposal TA Last.docx"
+DEFAULT_REFERENCE = Path.home() / "Downloads" / "Proposal TA Last.docx"
 ORDER = [
     "abstrak",
     "abstract",
@@ -40,10 +40,14 @@ ORDER = [
 LOGO = HERE / "figures" / "telkom_logo.png"
 
 # Cover and approval-sheet details, as on the student's proposal.
-TITLE_ID = ("Pemanfaatan Reward Berbasis Evidence untuk Pelatihan Agen Retrieval-Augmented Generation "
-            "(RAG) dengan Reinforcement Learning di Multi-Hop Question Answering (MHQA)")
-TITLE_EN = ("Utilizing Evidence-Based Rewards for Training Retrieval-Augmented Generation (RAG) "
-            "Agents with Reinforcement Learning in Multi-Hop Question Answering (MHQA)")
+TITLE_ID = (
+    "Pemanfaatan Reward Berbasis Evidence untuk Pelatihan Agen Retrieval-Augmented Generation "
+    "(RAG) dengan Reinforcement Learning di Multi-Hop Question Answering (MHQA)"
+)
+TITLE_EN = (
+    "Utilizing Evidence-Based Rewards for Training Retrieval-Augmented Generation (RAG) "
+    "Agents with Reinforcement Learning in Multi-Hop Question Answering (MHQA)"
+)
 NIM = "103012300339"
 NAME = "Muhammad Emirsyah Makarim"
 COURSE = "IF-47-DSIS.02 (CAK4EAB2)"
@@ -167,17 +171,24 @@ def align_paragraphs(doc: Document) -> None:
         text = p.text.strip()
         if text.startswith(("Gambar ", "Tabel ")) and p.runs and p.runs[0].bold:
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        # The proposal template names its body style "normal" (lower case), so compare case-insensitively.
-        if style.lower() in BODY_STYLES and text and not text.startswith(("Gambar ", "Tabel ")):
-            if p.alignment != WD_ALIGN_PARAGRAPH.CENTER:
-                p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-                p.paragraph_format.line_spacing = 1.5
+        # The proposal template names its body style "normal" (lower case),
+        # so compare case-insensitively.
+        if (
+            style.lower() in BODY_STYLES
+            and text
+            and not text.startswith(("Gambar ", "Tabel "))
+            and p.alignment != WD_ALIGN_PARAGRAPH.CENTER
+        ):
+            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            p.paragraph_format.line_spacing = 1.5
         # Images: centre the paragraph that holds a picture.
         if p._p.xpath(".//pic:pic"):
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
 
-def front_matter(doc: Document, document_type: str, sheet_title: str, sheet_text: str, supervisor_role: str) -> list:
+def front_matter(
+    doc: Document, document_type: str, sheet_title: str, sheet_text: str, supervisor_role: str
+) -> list:
     """Cover page and approval sheet in the layout of the student's proposal."""
     elements = []
     add = elements.append
@@ -194,7 +205,13 @@ def front_matter(doc: Document, document_type: str, sheet_title: str, sheet_text
     logo.add_run().add_picture(str(LOGO), width=Inches(1.37), height=Inches(1.83))
     add(logo._p)
     add(centered(doc)._p)
-    for line in ("Program Studi Sarjana Informatika", "Fakultas Informatika", "Universitas Telkom", "Bandung", "2025/2026"):
+    for line in (
+        "Program Studi Sarjana Informatika",
+        "Fakultas Informatika",
+        "Universitas Telkom",
+        "Bandung",
+        "2025/2026",
+    ):
         add(centered(doc, line)._p)
 
     heading = doc.add_paragraph(sheet_title, style="Heading 1")

@@ -38,21 +38,36 @@ BLOCK = 32
 BATCH = ROOT / "results/2026-10-10-batch"
 FIXES = ROOT / "results/2026-10-11-fixes/runs"
 RUNS = {
-    "R0 s7": BATCH / "r0_outcome_seed7", "R0 s8": BATCH / "r0_outcome_seed8",
+    "R0 s7": BATCH / "r0_outcome_seed7",
+    "R0 s8": BATCH / "r0_outcome_seed8",
     "R0 s9": FIXES / "r0_outcome_seed9",
-    "R1 s7": ROOT / "results/2026-10-10-grpo-run2", "R1 s8": BATCH / "r1_full_seed8",
+    "R1 s7": ROOT / "results/2026-10-10-grpo-run2",
+    "R1 s8": BATCH / "r1_full_seed8",
     "R1 s9": FIXES / "r1_full_seed9",
-    "R2 s7": BATCH / "r2_gated_seed7", "R2 s8": BATCH / "r2_gated_seed8",
+    "R2 s7": BATCH / "r2_gated_seed7",
+    "R2 s8": BATCH / "r2_gated_seed8",
     "R2 s9": FIXES / "r2_gated_seed9",
-    "R3 s7": FIXES / "r3_coverage2_seed7", "R3 s8": FIXES / "r3_coverage2_seed8",
+    "R3 s7": FIXES / "r3_coverage2_seed7",
+    "R3 s8": FIXES / "r3_coverage2_seed8",
     "R3 s9": FIXES / "r3_coverage2_seed9",
-    "R4 s7": FIXES / "r4_drgrpo_seed7", "R4 s8": FIXES / "r4_drgrpo_seed8",
+    "R4 s7": FIXES / "r4_drgrpo_seed7",
+    "R4 s8": FIXES / "r4_drgrpo_seed8",
     "R4 s9": FIXES / "r4_drgrpo_seed9",
     "R0-dyn s8": FIXES / "r0_dynsample_seed8",
 }
-METHOD_TITLE = {"R0": "R0 (outcome-only)", "R1": "R1 (VEGR)", "R2": "R2 (gated)",
-                "R3": "R3 (cakupan ×2)", "R4": "R4 (tanpa norm. std)", "R0-dyn": "R0-dyn (seed 8, 512 langkah)"}
-SEED_STYLE = {"s7": ("#0072B2", "o", "-"), "s8": ("#D55E00", "s", "--"), "s9": ("#009E73", "^", ":")}
+METHOD_TITLE = {
+    "R0": "R0 (outcome-only)",
+    "R1": "R1 (VEGR)",
+    "R2": "R2 (gated)",
+    "R3": "R3 (cakupan ×2)",
+    "R4": "R4 (tanpa norm. std)",
+    "R0-dyn": "R0-dyn (seed 8, 512 langkah)",
+}
+SEED_STYLE = {
+    "s7": ("#0072B2", "o", "-"),
+    "s8": ("#D55E00", "s", "--"),
+    "s9": ("#009E73", "^", ":"),
+}
 
 
 def load(path: Path) -> list[dict]:
@@ -67,20 +82,26 @@ def blocks(rows: list[dict]) -> list[dict]:
     out = []
     for b, steps in sorted(grouped.items()):
         rollouts = [r for s in steps for r in s.get("rollouts", [])]
-        valid = [r["citation_precision"] for r in rollouts if r.get("citation_precision") is not None]
+        valid = [
+            r["citation_precision"] for r in rollouts if r.get("citation_precision") is not None
+        ]
         # "invalid" (protocol/evidence) and "exhausted" (budget) rollouts both score -1.
         invalid = sum(r["status"] != "valid" for r in rollouts)
-        out.append({
-            "block": b + 1,
-            "steps": f"{b * BLOCK + 1}-{(b + 1) * BLOCK}",
-            "n_rollouts": len(rollouts),
-            "n_valid": len(valid),
-            "mean_precision": sum(valid) / len(valid) if valid else None,
-            "gold_cite_share": sum(v > 0 for v in valid) / len(valid) if valid else None,
-            "invalid_share": invalid / len(rollouts) if rollouts else None,
-            "skipped": sum(s["skipped_reason"] is not None for s in steps),
-            "mean_reward": sum(r["reward"] for r in rollouts) / len(rollouts) if rollouts else None,
-        })
+        out.append(
+            {
+                "block": b + 1,
+                "steps": f"{b * BLOCK + 1}-{(b + 1) * BLOCK}",
+                "n_rollouts": len(rollouts),
+                "n_valid": len(valid),
+                "mean_precision": sum(valid) / len(valid) if valid else None,
+                "gold_cite_share": sum(v > 0 for v in valid) / len(valid) if valid else None,
+                "invalid_share": invalid / len(rollouts) if rollouts else None,
+                "skipped": sum(s["skipped_reason"] is not None for s in steps),
+                "mean_reward": sum(r["reward"] for r in rollouts) / len(rollouts)
+                if rollouts
+                else None,
+            }
+        )
     return out
 
 
@@ -94,8 +115,16 @@ def panel(ax, data: dict[str, list[dict]], names: list[str], title: str, n_block
         color, marker, linestyle = SEED_STYLE[seed]
         ys = [b["mean_precision"] for b in data[name]]
         xs = [i + 1 for i, y in enumerate(ys) if y is not None]
-        ax.plot(xs, [y for y in ys if y is not None], color=color, marker=marker, linestyle=linestyle,
-                linewidth=1.6, markersize=4, label=f"seed {seed[1:]}")
+        ax.plot(
+            xs,
+            [y for y in ys if y is not None],
+            color=color,
+            marker=marker,
+            linestyle=linestyle,
+            linewidth=1.6,
+            markersize=4,
+            label=f"seed {seed[1:]}",
+        )
     ax.set_title(title, loc="left", fontsize=9)
     ax.set_ylim(-0.03, 1.0)
     ax.set_xlim(0.5, n_blocks + 0.5)
@@ -122,7 +151,7 @@ def main() -> None:
 
     # Body figure: R0 and R1, all seeds.
     fig, axes = plt.subplots(1, 2, figsize=(7.0, 2.9), sharey=True, layout="constrained")
-    for ax, method in zip(axes, ("R0", "R1")):
+    for ax, method in zip(axes, ("R0", "R1"), strict=False):
         panel(ax, data, [f"{method} s{s}" for s in (7, 8, 9)], METHOD_TITLE[method], 8)
         ax.set_xlabel(xlabel)
     axes[0].set_ylabel(ylabel)
@@ -133,7 +162,7 @@ def main() -> None:
 
     # Appendix figure: R2, R3, R4 (all seeds) and R0-dyn (16 blocks).
     fig, axes = plt.subplots(2, 2, figsize=(7.0, 5.4), layout="constrained")
-    for ax, method in zip(axes.flat[:3], ("R2", "R3", "R4")):
+    for ax, method in zip(axes.flat[:3], ("R2", "R3", "R4"), strict=False):
         panel(ax, data, [f"{method} s{s}" for s in (7, 8, 9)], METHOD_TITLE[method], 8)
     ax = axes.flat[3]
     panel(ax, data, ["R0-dyn s8"], METHOD_TITLE["R0-dyn"], 16)
@@ -150,19 +179,46 @@ def main() -> None:
     plt.close(fig)
 
     # Data files.
-    sources = {name: str((path / "metrics.jsonl").relative_to(ROOT)).replace("\\", "/")
-               for name, path in RUNS.items()}
+    sources = {
+        name: str((path / "metrics.jsonl").relative_to(ROOT)).replace("\\", "/")
+        for name, path in RUNS.items()
+    }
     (OUT / "training_dynamics.json").write_text(
-        json.dumps({"block_size": BLOCK, "sources": sources, "runs": data}, indent=2), encoding="utf-8")
+        json.dumps({"block_size": BLOCK, "sources": sources, "runs": data}, indent=2),
+        encoding="utf-8",
+    )
     with (OUT / "training_dynamics.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
-        writer.writerow(["run", "block", "steps", "n_rollouts", "n_valid", "mean_precision",
-                         "gold_cite_share", "invalid_share", "skipped", "mean_reward"])
+        writer.writerow(
+            [
+                "run",
+                "block",
+                "steps",
+                "n_rollouts",
+                "n_valid",
+                "mean_precision",
+                "gold_cite_share",
+                "invalid_share",
+                "skipped",
+                "mean_reward",
+            ]
+        )
         for name, rows in data.items():
             for b in rows:
-                writer.writerow([name, b["block"], b["steps"], b["n_rollouts"], b["n_valid"],
-                                 b["mean_precision"], b["gold_cite_share"], b["invalid_share"],
-                                 b["skipped"], b["mean_reward"]])
+                writer.writerow(
+                    [
+                        name,
+                        b["block"],
+                        b["steps"],
+                        b["n_rollouts"],
+                        b["n_valid"],
+                        b["mean_precision"],
+                        b["gold_cite_share"],
+                        b["invalid_share"],
+                        b["skipped"],
+                        b["mean_reward"],
+                    ]
+                )
 
     # Markdown tables for Lampiran B (Indonesian decimal comma).
     def fmt(v, digits=2, pct=False):
@@ -181,9 +237,14 @@ def main() -> None:
                 lines.append(f"| {label} | " + " | ".join(cells) + " |")
         return "\n".join(lines)
 
-    md = ["## Presisi sitasi rata-rata (rollout valid)", table("mean_precision"),
-          "## Rollout tidak valid (%)", table("invalid_share", pct=True),
-          "## Langkah yang dilewati per blok", table("skipped")]
+    md = [
+        "## Presisi sitasi rata-rata (rollout valid)",
+        table("mean_precision"),
+        "## Rollout tidak valid (%)",
+        table("invalid_share", pct=True),
+        "## Langkah yang dilewati per blok",
+        table("skipped"),
+    ]
     (OUT / "tables.md").write_text("\n\n".join(md) + "\n", encoding="utf-8")
     for name, rows in data.items():
         print(name, [fmt(b["mean_precision"]) for b in rows])
