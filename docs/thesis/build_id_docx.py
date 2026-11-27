@@ -34,6 +34,7 @@ ORDER = [
     "bab5-kesimpulan-dan-saran",
     "daftar-pustaka",
     "lampiran-a-prompt",
+    "lampiran-b-dinamika-pelatihan",
 ]
 
 LOGO = HERE / "figures" / "telkom_logo.png"
