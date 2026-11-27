@@ -40,8 +40,8 @@ RUNS = {
 RUN_ORDER = ["R0 s7", "R0 s8", "R0 s9", "R1 s7", "R1 s8", "R1 s9", "R2 s7", "R2 s8", "R2 s9",
              "R3 s7", "R3 s8", "R3 s9", "R4 s7", "R4 s8", "R4 s9", "R0-dyn s8"]
 METHODS = ["R0", "R1", "R2", "R3", "R4"]
-METHOD_LABEL = {"R0": "R0 outcome-only", "R1": "R1 VEGR", "R2": "R2 gated",
-                "R3": "R3 coverage ×2", "R4": "R4 Dr. GRPO", "R0-dyn": "R0-dyn (1 seed)"}
+METHOD_LABEL = {"R0": "R0 outcome-only", "R1": "R1 VEGR", "R2": "R2 bersyarat (gated)",
+                "R3": "R3 cakupan ×2", "R4": "R4 tanpa norm. std", "R0-dyn": "R0-dyn (1 run)"}
 
 # Okabe-Ito (colorblind-safe); hatching and markers give a second, non-color cue.
 STYLE = {
@@ -106,21 +106,21 @@ def system_diagram() -> None:
             mx, my = (start[0] + end[0]) / 2 + offset[0], (start[1] + end[1]) / 2 + offset[1]
             ax.text(mx, my, label, ha="center", va="bottom", fontsize=6.8, family="monospace")
 
-    box(1, 30, 17, 18, "Question", "distractor setting\n10 paragraphs\n(2 gold + 8 distractors)", "#F2F2F2")
-    box(27, 30, 21, 18, "Agent (policy)", "Qwen2.5-7B-Instruct\n+ LoRA (r=16)\none action per turn", "#DCEBF7")
-    box(58, 30, 21, 18, "SearchEnvironment", "BM25 over the 10\nparagraphs, top-3 docs\nmax 3 searches", "#FBE6D9")
-    box(58, 3, 21, 18, "VEGR reward", "EM + F1 + coverage\n+ precision + recall\n− 0.1·cost − 0.1·dup\ninvalid → −1", "#DDF1E8")
-    box(27, 3, 21, 18, "GRPO update", "G = 8 rollouts\ngroup-normalized advantage\nclipped objective, ε = 0.2\nzero-variance groups skipped", "#EDE7F6")
-    box(83, 30, 16, 18, "Gold labels", "answer\nsupporting facts\n(title, sentence)", "#F2F2F2")
+    box(1, 30, 17, 18, "Pertanyaan", "distractor setting\n10 paragraf\n(2 emas + 8 pengecoh)", "#F2F2F2")
+    box(27, 30, 21, 18, "Agen (policy)", "Qwen2.5-7B-Instruct\n+ LoRA (r=16)\nsatu aksi per giliran", "#DCEBF7")
+    box(58, 30, 21, 18, "SearchEnvironment", "BM25 pada 10\nparagraf, 3 dokumen teratas\nmaks. 3 pencarian", "#FBE6D9")
+    box(58, 3, 21, 18, "Reward VEGR", "EM + F1 + cakupan\n+ presisi + recall\n− 0,1·biaya − 0,1·dup\ntidak valid → −1", "#DDF1E8")
+    box(27, 3, 21, 18, "Pembaruan GRPO", "G = 8 rollout\nadvantage dinormalisasi grup\nobjektif clipped, ε = 0,2\ngrup variansi nol dilewati", "#EDE7F6")
+    box(83, 30, 16, 18, "Label emas", "jawaban\nsupporting facts\n(judul, kalimat)", "#F2F2F2")
 
     arrow((18.6, 39), (26.4, 39))
     arrow((48.6, 44), (57.4, 44), "SEARCH[q]", offset=(0, 0.5))
     arrow((48.6, 38), (57.4, 38), "ANSWER[a]", offset=(0, 0.5))
-    arrow((57.4, 32), (48.6, 32), "results", offset=(0, 0.5))
-    arrow((68.5, 29.4), (68.5, 21.6), "finished\nepisode", offset=(-6.5, -2.5))
+    arrow((57.4, 32), (48.6, 32), "hasil", offset=(0, 0.5))
+    arrow((68.5, 29.4), (68.5, 21.6), "episode\nselesai", offset=(-6.5, -2.5))
     arrow((91, 29.4), (79.6, 15), rad=-0.2)
     arrow((57.4, 12), (48.6, 12), "reward ×8")
-    arrow((37.5, 21.6), (37.5, 29.4), "update LoRA", offset=(-7.5, -1.5))
+    arrow((37.5, 21.6), (37.5, 29.4), "perbarui LoRA", offset=(-7.5, -1.5))
     fig.savefig(OUT / "fig3_1_system.pdf")
     fig.savefig(OUT / "fig3_1_system.png", dpi=300)
     plt.close(fig)
@@ -187,6 +187,34 @@ def paired_bootstrap(a: dict[str, float], b: dict[str, float], resamples: int = 
             "high": float(high) * 100, "n": len(ids), "resamples": resamples}
 
 
+def seed_bootstrap(a_runs: list[dict[str, dict]], b_runs: list[dict[str, dict]], score,
+                   resamples: int = 10_000, seed: int = 0) -> dict:
+    """Seed-aware paired bootstrap, the same procedure as scripts/peer_review_reanalysis.py:
+    each resample draws seeds with replacement per method and questions with replacement."""
+    import random
+    from itertools import product
+
+    rng = random.Random(seed)
+    ids = sorted(set.intersection(*(set(r) for r in a_runs + b_runs)))
+    va = [[score(r[q]) for q in ids] for r in a_runs]
+    vb = [[score(r[q]) for q in ids] for r in b_runs]
+    point = 100 * (sum(map(sum, va)) / (len(va) * len(ids)) - sum(map(sum, vb)) / (len(vb) * len(ids)))
+
+    def combos(v):
+        return [[sum(v[s][j] for s in c) / len(c) for j in range(len(ids))]
+                for c in product(range(len(v)), repeat=len(v))]
+
+    ca, cb = combos(va), combos(vb)
+    out = []
+    for _ in range(resamples):
+        x, y = ca[rng.randrange(len(ca))], cb[rng.randrange(len(cb))]
+        q = [rng.randrange(len(ids)) for _ in range(len(ids))]
+        out.append(100 * sum(x[j] - y[j] for j in q) / len(ids))
+    out.sort()
+    return {"delta": point, "low": out[int(0.025 * resamples)], "high": out[int(0.975 * resamples)],
+            "n": len(ids), "resamples": resamples}
+
+
 def method_of(name: str) -> str:
     return name.split()[0]
 
@@ -216,18 +244,18 @@ def ch4_figures() -> dict:
         p = points[name]
         ax.annotate(name, (p["em_all"] * 100, p["citation_precision"]), xytext=offset,
                     textcoords="offset points", fontsize=7, ha="center" if offset[0] <= 0 else "left")
-    ax.annotate("R1–R4, all seeds", (43, 0.79), xytext=(0, 4), textcoords="offset points",
+    ax.annotate("R1–R4, semua seed", (43, 0.79), xytext=(0, 4), textcoords="offset points",
                 ha="center", fontsize=7.5)
     keys = ["B0", *METHODS, "R0-dyn"]
     handles = [Line2D([], [], linestyle="", marker=style(k if k == "B0" else k + " x")["marker"],
                       color=style(k if k == "B0" else k + " x")["color"], markersize=6,
-                      label="B0 (un-tuned)" if k == "B0" else METHOD_LABEL[k]) for k in keys]
+                      label="B0 (tanpa pelatihan)" if k == "B0" else METHOD_LABEL[k]) for k in keys]
     ax.legend(handles=handles, frameon=False, fontsize=7, loc="lower left")
     ax.set_xlim(15, 55)
     ax.set_ylim(-0.06, 1.0)
-    ax.set_xlabel("EM on holdout (%), failures count as 0")
-    ax.set_ylabel("Citation precision\n(completed episodes)")
-    ax.set_title("Same accuracy, different grounding", loc="left")
+    ax.set_xlabel("EM pada holdout (%), episode gagal dihitung 0")
+    ax.set_ylabel("Presisi sitasi\n(episode yang selesai)")
+    ax.set_title("Akurasi serupa, grounding berbeda", loc="left")
     fig.savefig(OUT / "fig4_3_em_vs_precision.pdf")
     fig.savefig(OUT / "fig4_3_em_vs_precision.png", dpi=300)
     plt.close(fig)
@@ -235,7 +263,7 @@ def ch4_figures() -> dict:
     # Figure 4.4: EM and grounded EM per seed for each method (two panels, one y-scale).
     fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.2), layout="constrained", sharey=True)
     seed_points = {}
-    for ax, key, title in zip(axes, ("em_all", "grounded_em"), ("EM", "Grounded EM")):
+    for ax, key, title in zip(axes, ("em_all", "grounded_em"), ("EM", "Precision-grounded EM")):
         seed_points[key] = {}
         for i, method in enumerate(METHODS):
             names = [n for n in RUN_ORDER if method_of(n) == method]
@@ -258,42 +286,49 @@ def ch4_figures() -> dict:
         ax.set_xlim(-0.6, 5.6)
         ax.set_title(title, loc="left")
     axes[0].set_ylim(-2, 55)
-    axes[0].set_ylabel("Holdout score (%), 300 questions")
-    fig.suptitle("Per-seed holdout scores (dots = seeds 7, 8, 9; bar = mean)", x=0.02, ha="left",
+    axes[0].set_ylabel("Skor holdout (%), 300 pertanyaan")
+    fig.suptitle("Skor holdout per seed (titik = seed 7, 8, 9; garis = rata-rata)", x=0.02, ha="left",
                  fontsize=9)
     fig.savefig(OUT / "fig4_4_em_per_seed.pdf")
     fig.savefig(OUT / "fig4_4_em_per_seed.png", dpi=300)
     plt.close(fig)
 
-    # Figure 4.5: paired bootstrap over questions, scores averaged over seeds 7/8/9.
+    # Figure 4.5: seed-aware paired bootstrap (seeds and questions resampled), the intervals
+    # used for inference in the text. Question-only intervals are kept in the JSON for reference.
     by_method = {m: [episodes[n] for n in RUN_ORDER if method_of(n) == m] for m in METHODS}
     by_method["B0"] = [episodes["B0"]]
     by_method["R0 s8"] = [episodes["R0 s8"]]
     by_method["R0-dyn s8"] = [episodes["R0-dyn s8"]]
     comparisons = [("R0", "B0"), ("R1", "B0"), ("R2", "B0"), ("R3", "B0"), ("R4", "B0"),
                    ("R1", "R0"), ("R2", "R1"), ("R3", "R1"), ("R4", "R1"), ("R0-dyn s8", "R0 s8")]
-    boot = {}
+    boot, seed_boot = {}, {}
     for metric, score in (("em", em_all), ("grounded_em", grounded_em)):
         boot[metric] = {f"{a} − {b}": paired_bootstrap(per_question(by_method[a], score),
                                                        per_question(by_method[b], score))
                         for a, b in comparisons}
+        seed_boot[metric] = {f"{a} − {b}": seed_bootstrap(by_method[a], by_method[b], score)
+                             for a, b in comparisons if len(by_method[a]) > 1}
     fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.6), layout="constrained", sharey=True)
     labels = [f"{a} − {b}" for a, b in comparisons]
-    for ax, metric, title in zip(axes, ("em", "grounded_em"), ("ΔEM", "ΔGrounded EM")):
+    for ax, metric, title in zip(axes, ("em", "grounded_em"), ("ΔEM", "ΔPrecision-grounded EM")):
         for y, label in enumerate(reversed(labels)):
-            r = boot[metric][label]
+            single_run = label not in seed_boot[metric]
+            r = boot[metric][label] if single_run else seed_boot[metric][label]
             st = STYLE[method_of(label)]
             ax.errorbar(r["delta"], y, xerr=[[r["delta"] - r["low"]], [r["high"] - r["delta"]]],
-                        fmt=st["marker"], color=st["color"], capsize=3, markersize=5)
+                        fmt=st["marker"], color=st["color"], capsize=3, markersize=5,
+                        mfc="white" if single_run else st["color"])
         ax.axvline(0, color="#333333", linewidth=1)
+        ax.axhline(0.5, color="#BBBBBB", linewidth=0.8, linestyle="--")
         ax.axhline(4.5, color="#BBBBBB", linewidth=0.8, linestyle="--")
-        ax.set_xlabel(f"{title} (points), 95% CI")
+        ax.set_xlabel(f"{title} (poin), SK 95%")
     axes[0].set_yticks(range(len(labels)), list(reversed(labels)))
-    axes[1].text(0.98, 0.98, "vs. B0 (RQ1)", transform=axes[1].transAxes, fontsize=7,
+    axes[1].text(0.98, 0.98, "terhadap B0 (RQ1)", transform=axes[1].transAxes, fontsize=7,
                  va="top", ha="right", color="#555555")
-    axes[1].text(0.98, 0.02, "between methods\n(RQ2/RQ3)", transform=axes[1].transAxes,
+    axes[1].text(0.98, 0.14, "antarmetode\n(RQ2/RQ3)", transform=axes[1].transAxes,
                  fontsize=7, va="bottom", ha="right", color="#555555")
-    fig.suptitle("Paired differences on the holdout (method scores averaged over seeds 7–9)",
+    fig.suptitle("Selisih berpasangan pada holdout (SK yang memperhitungkan seed;\n"
+                 "penanda kosong = satu run, SK hanya me-resample pertanyaan)",
                  x=0.02, ha="left", fontsize=9)
     fig.savefig(OUT / "fig4_5_bootstrap.pdf")
     fig.savefig(OUT / "fig4_5_bootstrap.png", dpi=300)
@@ -303,18 +338,19 @@ def ch4_figures() -> dict:
     fig, ax = plt.subplots(figsize=(7.0, 3.0), layout="constrained")
     names = ["B0", *RUN_ORDER]
     kind_style = {"evidence": ("#CC79A7", ""), "protocol": ("#E69F00", "//"), "budget": ("#56B4E9", "..")}
+    kind_label = {"evidence": "bukti", "protocol": "protokol", "budget": "anggaran"}
     bottoms = [0] * len(names)
     for kind in FAILURE_KINDS:
         values = [summaries[n]["failures"][kind] for n in names]
         color, hatch = kind_style[kind]
         ax.bar(range(len(names)), values, bottom=bottoms, color=color, hatch=hatch,
-               edgecolor="white", width=0.7, label=kind)
+               edgecolor="white", width=0.7, label=kind_label[kind])
         bottoms = [b + v for b, v in zip(bottoms, values)]
     for i, total in enumerate(bottoms):
         ax.text(i, total + 2, str(total), ha="center", fontsize=7)
     ax.set_xticks(range(len(names)), names, rotation=45, ha="right", fontsize=7.5)
-    ax.set_ylabel("Failed episodes (of 300)")
-    ax.set_title("Failed holdout episodes by type", loc="left")
+    ax.set_ylabel("Episode gagal (dari 300)")
+    ax.set_title("Episode holdout yang gagal menurut jenisnya", loc="left")
     ax.legend(frameon=False, fontsize=7.5)
     fig.savefig(OUT / "fig4_6_failures.pdf")
     fig.savefig(OUT / "fig4_6_failures.png", dpi=300)
@@ -335,16 +371,18 @@ def ch4_figures() -> dict:
         ax.text(x, cited[x] + 3, str(cited[x]), ha="center", fontsize=7.5)
     ax.set_xticks(xs)
     ax.set_ylim(0, max(cited.values()) * 1.12)
-    ax.set_xlabel("Sentence index within the cited paragraph")
-    ax.set_ylabel("Citations")
-    ax.set_title("Which sentences R1 (seed 8) cites", loc="left")
+    ax.set_xlabel("Indeks kalimat di dalam paragraf yang disitasi")
+    ax.set_ylabel("Jumlah sitasi")
+    ax.set_title("Kalimat yang disitasi R1 (seed 8)", loc="left")
     fig.savefig(OUT / "fig4_7_cited_index.pdf")
     fig.savefig(OUT / "fig4_7_cited_index.png", dpi=300)
     plt.close(fig)
 
     return {"points": points, "seed_points": seed_points,
-            "bootstrap": {"note": "per-question scores averaged over seeds 7/8/9 per method; "
-                                  "10k resamples, RNG seed 0", **boot},
+            "bootstrap": {"note": "question-only: per-question scores averaged over seeds 7/8/9 per "
+                                  "method; 10k resamples, RNG seed 0", **boot},
+            "seed_bootstrap": {"note": "seed-aware (plotted in Figure 4.5): seeds and questions "
+                                       "resampled; 10k resamples, random.Random(0)", **seed_boot},
             "failures": {n: summaries[n]["failures"] for n in names},
             "cited_sentence_index_r1_s8": cited}
 
@@ -368,8 +406,8 @@ def main() -> None:
                 va="bottom", fontsize=7)
     ax.set_xticks(range(len(names)), names, rotation=45, ha="right", fontsize=7.5)
     ax.set_ylim(0, 300)
-    ax.set_ylabel("Skipped steps (of 256;\nR0-dyn: of 512 drawn)")
-    ax.set_title("Zero-variance GRPO steps skipped during training", loc="left")
+    ax.set_ylabel("Langkah dilewati (dari 256;\nR0-dyn: dari 512)")
+    ax.set_title("Langkah dengan grup variansi nol yang dilewati selama pelatihan", loc="left")
     fig.savefig(OUT / "fig4_1_skipped_steps.pdf")
     fig.savefig(OUT / "fig4_1_skipped_steps.png", dpi=300)
     plt.close(fig)
@@ -389,9 +427,9 @@ def main() -> None:
     ax.set_xticks(range(len(labels)), labels, rotation=30, ha="right")
     ax.set_xlim(-0.3, len(labels) + 0.2)
     ax.set_ylim(-0.02, 1)
-    ax.set_xlabel("Training steps (32-step blocks)")
-    ax.set_ylabel("Mean citation precision\n(valid training rollouts)")
-    ax.set_title("Citation precision during training, seed 8", loc="left")
+    ax.set_xlabel("Langkah pelatihan (blok 32 langkah)")
+    ax.set_ylabel("Rata-rata presisi sitasi\n(rollout pelatihan yang valid)")
+    ax.set_title("Presisi sitasi selama pelatihan, seed 8", loc="left")
     fig.savefig(OUT / "fig4_2_citation_precision.pdf")
     fig.savefig(OUT / "fig4_2_citation_precision.png", dpi=300)
     plt.close(fig)

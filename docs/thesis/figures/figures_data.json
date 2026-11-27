@@ -87,12 +87,12 @@
     "R0 s8": [
       {
         "steps": "1-32",
-        "mean_precision": 0.5677083333333334,
+        "mean_precision": 0.5677083333333333,
         "n_valid_rollouts": 128
       },
       {
         "steps": "33-64",
-        "mean_precision": 0.4990138067061144,
+        "mean_precision": 0.4990138067061143,
         "n_valid_rollouts": 169
       },
       {
@@ -139,7 +139,7 @@
       },
       {
         "steps": "65-96",
-        "mean_precision": 0.6540880503144654,
+        "mean_precision": 0.6540880503144655,
         "n_valid_rollouts": 212
       },
       {
@@ -149,7 +149,7 @@
       },
       {
         "steps": "129-160",
-        "mean_precision": 0.6198140200286123,
+        "mean_precision": 0.6198140200286122,
         "n_valid_rollouts": 233
       },
       {
@@ -164,7 +164,7 @@
       },
       {
         "steps": "225-256",
-        "mean_precision": 0.7608225108225108,
+        "mean_precision": 0.7608225108225107,
         "n_valid_rollouts": 231
       }
     ]
@@ -199,7 +199,7 @@
       "R0 s7": {
         "em_all": 0.42,
         "grounded_em": 0.24666666666666667,
-        "citation_precision": 0.6205035971223022,
+        "citation_precision": 0.6205035971223021,
         "completed": 278
       },
       "R0 s8": {
@@ -211,7 +211,7 @@
       "R1 s7": {
         "em_all": 0.4266666666666667,
         "grounded_em": 0.3233333333333333,
-        "citation_precision": 0.7505807200929152,
+        "citation_precision": 0.7505807200929153,
         "completed": 287
       },
       "R1 s8": {
@@ -229,7 +229,7 @@
       "R2 s8": {
         "em_all": 0.4866666666666667,
         "grounded_em": 0.3233333333333333,
-        "citation_precision": 0.7034482758620689,
+        "citation_precision": 0.703448275862069,
         "completed": 290
       },
       "R0 s9": {
@@ -253,13 +253,13 @@
       "R3 s7": {
         "em_all": 0.41333333333333333,
         "grounded_em": 0.2633333333333333,
-        "citation_precision": 0.7005190311418684,
+        "citation_precision": 0.7005190311418685,
         "completed": 289
       },
       "R3 s8": {
         "em_all": 0.41,
         "grounded_em": 0.18666666666666668,
-        "citation_precision": 0.6329225352112676,
+        "citation_precision": 0.6329225352112678,
         "completed": 284
       },
       "R3 s9": {
@@ -277,7 +277,7 @@
       "R4 s8": {
         "em_all": 0.4633333333333333,
         "grounded_em": 0.30333333333333334,
-        "citation_precision": 0.6928327645051194,
+        "citation_precision": 0.6928327645051197,
         "completed": 293
       },
       "R4 s9": {
@@ -350,7 +350,7 @@
       }
     },
     "bootstrap": {
-      "note": "per-question scores averaged over seeds 7/8/9 per method; 10k resamples, RNG seed 0",
+      "note": "question-only: per-question scores averaged over seeds 7/8/9 per method; 10k resamples, RNG seed 0",
       "em": {
         "R0 \u2212 B0": {
           "delta": 20.222222222222218,
@@ -491,6 +491,139 @@
           "delta": 0.0,
           "low": 0.0,
           "high": 0.0,
+          "n": 300,
+          "resamples": 10000
+        }
+      }
+    },
+    "seed_bootstrap": {
+      "note": "seed-aware (plotted in Figure 4.5): seeds and questions resampled; 10k resamples, random.Random(0)",
+      "em": {
+        "R0 \u2212 B0": {
+          "delta": 20.222222222222225,
+          "low": 15.111111111111112,
+          "high": 25.555555555555564,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R1 \u2212 B0": {
+          "delta": 21.22222222222222,
+          "low": 16.44444444444445,
+          "high": 26.0,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R2 \u2212 B0": {
+          "delta": 20.333333333333336,
+          "low": 13.77777777777778,
+          "high": 27.44444444444444,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R3 \u2212 B0": {
+          "delta": 20.0,
+          "low": 14.777777777777782,
+          "high": 25.22222222222223,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R4 \u2212 B0": {
+          "delta": 21.666666666666668,
+          "low": 15.666666666666666,
+          "high": 27.55555555555556,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R1 \u2212 R0": {
+          "delta": 0.9999999999999953,
+          "low": -3.5555555555555545,
+          "high": 5.444444444444442,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R2 \u2212 R1": {
+          "delta": -0.8888888888888835,
+          "low": -7.11111111111111,
+          "high": 5.777777777777776,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R3 \u2212 R1": {
+          "delta": -1.222222222222219,
+          "low": -5.666666666666667,
+          "high": 3.3333333333333357,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R4 \u2212 R1": {
+          "delta": 0.4444444444444473,
+          "low": -5.222222222222221,
+          "high": 5.666666666666664,
+          "n": 300,
+          "resamples": 10000
+        }
+      },
+      "grounded_em": {
+        "R0 \u2212 B0": {
+          "delta": -4.777777777777778,
+          "low": -16.0,
+          "high": 10.666666666666666,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R1 \u2212 B0": {
+          "delta": 19.666666666666664,
+          "low": 13.333333333333336,
+          "high": 26.111111111111104,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R2 \u2212 B0": {
+          "delta": 16.777777777777775,
+          "low": 11.666666666666666,
+          "high": 21.888888888888886,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R3 \u2212 B0": {
+          "delta": 11.666666666666666,
+          "low": 5.0,
+          "high": 18.22222222222222,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R4 \u2212 B0": {
+          "delta": 18.0,
+          "low": 10.0,
+          "high": 26.666666666666668,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R1 \u2212 R0": {
+          "delta": 24.444444444444443,
+          "low": 8.777777777777777,
+          "high": 37.333333333333336,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R2 \u2212 R1": {
+          "delta": -2.888888888888891,
+          "low": -9.777777777777779,
+          "high": 3.555555555555558,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R3 \u2212 R1": {
+          "delta": -7.999999999999999,
+          "low": -16.111111111111104,
+          "high": -0.22222222222222351,
+          "n": 300,
+          "resamples": 10000
+        },
+        "R4 \u2212 R1": {
+          "delta": -1.6666666666666663,
+          "low": -10.888888888888888,
+          "high": 7.66666666666667,
           "n": 300,
           "resamples": 10000
         }

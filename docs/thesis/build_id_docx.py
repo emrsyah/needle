@@ -9,6 +9,7 @@ Output: docs/thesis/output/tugas-akhir-id.docx. Export to PDF from Word (or expo
 from __future__ import annotations
 
 import sys
+import tempfile
 from pathlib import Path
 
 import pypandoc
@@ -25,6 +26,7 @@ BODY_STYLES = ("normal", "body text", "first paragraph", "compact", "bibliograph
 DEFAULT_REFERENCE =Path.home() / "Downloads" / "Proposal TA Last.docx"
 ORDER = [
     "abstrak",
+    "abstract",
     "bab1-pendahuluan",
     "bab2-kajian-pustaka",
     "bab3-perancangan-sistem",
@@ -236,7 +238,14 @@ def main() -> None:
     OUT_DIR.mkdir(exist_ok=True)
     raw = OUT_DIR / "tugas-akhir-id.raw.docx"
     target = OUT_DIR / "tugas-akhir-id.docx"
-    doc = pandoc_to_docx([SOURCE / f"{name}.md" for name in ORDER], SOURCE, raw, reference)
+    with tempfile.TemporaryDirectory() as tmp:
+        files = []
+        # Numbered names: pypandoc sorts the input list, so the prefix fixes the order.
+        for index, name in enumerate(ORDER):
+            path = Path(tmp) / f"{index:02d}-{name}.md"
+            path.write_text((SOURCE / f"{name}.md").read_text(encoding="utf-8"), encoding="utf-8")
+            files.append(path)
+        doc = pandoc_to_docx(files, SOURCE, raw, reference)
     apply_styles(doc)
     front = front_matter(
         doc,
